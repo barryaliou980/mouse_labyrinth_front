@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🐭 Mouse AI - Landing Page
 
-## Getting Started
+Développée avec **Next.js 14 (App Router)**, **TypeScript** et **TailwindCSS**.  
+Elle présente le projet **Mouse AI**, une simulation où des souris virtuelles explorent des labyrinthes guidées par une IA.  
 
-First, run the development server:
+---
+## 🚀 Fonctionnalités
+
+- **Présentation du projet Mouse AI** et de son objectif pédagogique  
+- **Explication de l’IA** qui guide les souris dans un labyrinthe  
+- **Création d’un labyrinthe personnalisé** (taille et configuration choisies par l’utilisateur)  
+- **Choix du nombre de souris** à lancer dans le labyrinthe  
+- **Simulation interactive** où les souris évoluent vers l’objectif  
+- **Lien direct vers l’API backend FastAPI** pour tester les endpoints  
+- **Design responsive** avec TailwindCSS  
+
+---
+
+## 📦 Installation
 
 ```bash
+# Cloner le projet
+git clone <repository_url>
+cd mouse_ai_front
+
+# Installer les dépendances
+npm install
+
+# Lancer le serveur de développement
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Structure du projet 
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+app/                           # App Router Next.js
+  layout.tsx                   # Layout global (navbar, thème, etc.)
+  page.tsx                     # Page d’accueil 
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+  simulation/                  # Pages liées à la simulation
+    components/                # Composants spécifiques simulation
 
-## Learn More
+  api/                         # API Routes (Server Actions/REST)
+    simulation/
+      route.ts                 # POST → démarrer simulation (mocké ou réel)
 
-To learn more about Next.js, take a look at the following resources:
+  globals.css                  # Styles globaux (import Tailwind)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+components/                    # Composants UI réutilisables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+lib/                           # Logique utilitaire
+  apiClient.ts                 # Fonctions fetch/REST mockées
+  websocketClient.ts           # Gestion client WebSocket
+  mocks/                       # Données mock pour dev rapide
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+public/                        # Images/icônes statiques
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+tests/                         # Tests unitaires (Jest / React Testing Library)
+
+tailwind.config.js             # Config Tailwind
+tsconfig.json                  # Config TypeScript
+package.json
+README.md
+```
