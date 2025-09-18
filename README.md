@@ -1,4 +1,4 @@
-# 🐭 Mouse AI - Landing Page
+#  Mouse AI - Landing Page
 
 Développée avec **Next.js 14 (App Router)**, **TypeScript** et **TailwindCSS**.  
 Elle présente le projet **Mouse AI**, une simulation où des souris virtuelles explorent des labyrinthes guidées par une IA.  
@@ -63,3 +63,8 @@ tsconfig.json                  # Config TypeScript
 package.json
 README.md
 ```
+
+
+```bash
+# le lien du front :
+https://mouse-labyrinth.vercel.app/
