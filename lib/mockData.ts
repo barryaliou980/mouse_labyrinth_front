@@ -10,7 +10,7 @@ export const mockLabyrinths: Labyrinth[] = [
     height: 10,
     grid: [
       ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
-      ['wall', 'start', 'path', 'path', 'wall', 'wall', 'path', 'path', 'cheese', 'wall'],
+      ['wall', 'start', 'path', 'path', 'wall', 'wall', 'path', 'path', 'path', 'wall'],
       ['wall', 'path', 'wall', 'path', 'wall', 'wall', 'path', 'wall', 'path', 'wall'],
       ['wall', 'path', 'wall', 'path', 'path', 'path', 'path', 'wall', 'path', 'wall'],
       ['wall', 'path', 'wall', 'wall', 'wall', 'wall', 'path', 'wall', 'path', 'wall'],
@@ -21,7 +21,7 @@ export const mockLabyrinths: Labyrinth[] = [
       ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
     ],
     startPositions: [{ x: 1, y: 1 }],
-    cheesePositions: [{ x: 8, y: 1 }, { x: 1, y: 8 }],
+    cheesePositions: [ { x: 1, y: 8 }],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -33,7 +33,7 @@ export const mockLabyrinths: Labyrinth[] = [
     height: 15,
     grid: [
       ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
-      ['wall', 'start', 'path', 'path', 'wall', 'path', 'path', 'path', 'wall', 'path', 'path', 'path', 'wall', 'cheese', 'wall'],
+      ['wall', 'start', 'path', 'path', 'wall', 'path', 'path', 'path', 'wall', 'path', 'path', 'path', 'wall', 'path', 'wall'],
       ['wall', 'path', 'wall', 'path', 'wall', 'path', 'wall', 'path', 'wall', 'path', 'wall', 'path', 'wall', 'path', 'wall'],
       ['wall', 'path', 'wall', 'path', 'path', 'path', 'wall', 'path', 'path', 'path', 'wall', 'path', 'path', 'path', 'wall'],
       ['wall', 'path', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'path', 'wall'],
@@ -61,7 +61,7 @@ export const mockLabyrinths: Labyrinth[] = [
     height: 12,
     grid: [
       ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
-      ['wall', 'start', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'cheese', 'wall'],
+      ['wall', 'start', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'wall'],
       ['wall', 'path', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'path', 'wall'],
       ['wall', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'wall'],
       ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'path', 'wall'],

@@ -90,6 +90,13 @@ export class ClientSimulation {
   // Traiter le tour d'une souris
   private async processMouseTurn(mouse: Mouse) {
     try {
+      // Vérifier si la souris est déjà sur un fromage
+      const alreadyOnCheese = this.checkCheeseFound(mouse.position);
+      if (alreadyOnCheese) {
+        this.log(`${mouse.name} est déjà sur un fromage à (${mouse.position.x}, ${mouse.position.y}) - pas de mouvement`);
+        return; // Ne pas traiter cette souris
+      }
+      
       // Obtenir le mouvement de l'IA (mockée)
       const move = await this.getMouseMove(mouse);
       
