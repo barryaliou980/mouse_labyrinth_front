@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: scs
+      POSTGRES_PASSWORD: scs
+      POSTGRES_DB: scs
+    ports:
+      - "5432:5432"
+    volumes:
+      - scs_pg:/var/lib/postgresql/data
+volumes:
+  scs_pg:
