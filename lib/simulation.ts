@@ -62,18 +62,63 @@ function applyRules_social(state: SimulationState, env:any, m: Mouse, moved:bool
   else if (state.turn % 5 === 0) m.mood = Math.max(0, m.mood-1);
 }
 
+function randomFreeCell(
+  env: { w: number; h: number; walls: Set<string> },
+  used: Set<string>,
+  maze: Maze
+) {
+  const free: { x: number; y: number }[] = [];
+  for (let y = 0; y < env.h; y++) {
+    for (let x = 0; x < env.w; x++) {
+      const ch = maze.grid[y][x];
+      // case vide uniquement, pas mur (#), pas déjà utilisée
+      if (ch === "." && !env.walls.has(`${x},${y}`) && !used.has(`${x},${y}`)) {
+        free.push({ x, y });
+      }
+    }
+  }
+  if (free.length === 0) return { x: 1, y: 1 }; // fallback très rare
+  const idx = Math.floor(Math.random() * free.length);
+  used.add(`${free[idx].x},${free[idx].y}`);
+  return free[idx];
+}
+
 export function createSimulation(cfg: SimulationConfig) {
   const id = randomUUID();
-  const { h,w,walls,cheeses,start } = parseMaze(cfg.maze);
-  const mice: Mouse[] = cfg.mice.map((m,i)=>({
-    id: randomUUID(), name: m.name ?? `Souris ${i+1}`, agentUrl: m.agentUrl,
-    pos: m.start ?? (start ?? { x:1, y:1 }), health:10, mood:10, eaten:0
-  }));
-  const state: SimulationState = { id, turn:0, maze: cfg.maze, mice, cheeses:[...cheeses], finished:false, ruleset: cfg.ruleset ?? "simple", history: [] };
+  const { h, w, walls, cheeses /*, start*/ } = parseMaze(cfg.maze);
+
+  const env = { h, w, walls };
+  const used = new Set<string>(); // empêche deux souris de partager la même case au spawn
+
+  const mice: Mouse[] = cfg.mice.map((m, i) => {
+    const spawn = randomFreeCell(env, used, cfg.maze);
+    return {
+      id: randomUUID(),
+      name: m.name ?? `Souris ${i + 1}`,
+      agentUrl: m.agentUrl,
+      pos: spawn,
+      health: 10,
+      mood: 10,
+      eaten: 0,
+    };
+  });
+
+  const state: SimulationState = {
+    id,
+    turn: 0,
+    maze: cfg.maze,
+    mice,
+    cheeses: [...cheeses],
+    finished: false,
+    ruleset: cfg.ruleset ?? "simple",
+    history: [],
+  };
+
   sims.set(id, state);
-  runLoop(state, cfg, { h,w,walls });
+  runLoop(state, cfg, env);
   return state;
 }
+
 
 async function runLoop(state: SimulationState, cfg: SimulationConfig, env:any) {
   const maxTurns = cfg.maxTurns ?? 50;

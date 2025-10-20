@@ -60,7 +60,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
+            <div className="text-center p-6 rounded-xl bg-gray-50 transition-colors duration-200">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Zap className="w-6 h-6 text-blue-600" />
               </div>
@@ -68,7 +68,7 @@ export default function HomePage() {
               <p className="text-gray-600">Algorithmes de décision pour franchir les obstacles et optimiser le chemin.</p>
             </div>
 
-            <div className="text-center p-6 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
+            <div className="text-center p-6 rounded-xl bg-gray-50 transition-colors duration-200">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Grid3x3 className="w-6 h-6 text-green-600" />
               </div>
@@ -76,7 +76,7 @@ export default function HomePage() {
               <p className="text-gray-600">Plusieurs cartes de démo et extension possible via votre serveur.</p>
             </div>
 
-            <div className="text-center p-6 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
+            <div className="text-center p-6 rounded-xl bg-gray-50 transition-colors duration-200">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Play className="w-6 h-6 text-purple-600" />
               </div>

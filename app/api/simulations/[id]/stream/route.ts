@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       const interval = setInterval(()=>{
         controller.enqueue(enc.encode(`data: ${JSON.stringify(sim)}\n\n`));
         if (sim.finished) { clearInterval(interval); controller.close(); }
-      }, 500);
+      }, 250);
     }
   });
   return new Response(stream, { headers: { "Content-Type":"text/event-stream", "Cache-Control":"no-cache", "Connection":"keep-alive" } });
