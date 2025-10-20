@@ -24,3 +24,34 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Assurer que tous les inputs ont des couleurs bien définies */
+input, select, textarea {
+  color: #111827 !important; /* text-gray-900 */
+  background-color: #ffffff !important;
+}
+
+input:disabled, select:disabled, textarea:disabled {
+  color: #6b7280 !important; /* text-gray-500 */
+  background-color: #f3f4f6 !important; /* bg-gray-100 */
+}
+
+/* Assurer que les labels sont visibles */
+label {
+  color: #374151 !important; /* text-gray-700 */
+}
+
+/* Assurer que les spans dans les statistiques sont visibles */
+span {
+  color: inherit;
+}
+
+/* Assurer que les textes dans les cartes sont visibles */
+.bg-gray-50 span {
+  color: #374151 !important; /* text-gray-700 */
+}
+
+/* Assurer que les textes dans les logs sont visibles */
+.bg-gray-900 {
+  color: #10b981 !important; /* text-green-400 */
+}
