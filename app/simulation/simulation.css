@@ -1,0 +1,126 @@
+/* Styles spécifiques pour la page de simulation */
+.simulation-page {
+  color: #111827 !important;
+  background-color: #f9fafb;
+  min-height: 100vh;
+}
+
+.simulation-page h1,
+.simulation-page h2,
+.simulation-page h3,
+.simulation-page h4,
+.simulation-page h5,
+.simulation-page h6 {
+  color: #111827 !important;
+}
+
+.simulation-page p,
+.simulation-page div,
+.simulation-page span {
+  color: #111827 !important;
+}
+
+/* Titres spécifiques */
+.simulation-page .text-xl {
+  color: #111827 !important;
+  font-weight: 700 !important;
+}
+
+.simulation-page .text-2xl {
+  color: #111827 !important;
+  font-weight: 700 !important;
+}
+
+.simulation-page .text-lg {
+  color: #111827 !important;
+  font-weight: 600 !important;
+}
+
+.simulation-page .text-sm {
+  color: #4b5563 !important;
+}
+
+.simulation-page .text-xs {
+  color: #6b7280 !important;
+}
+
+/* Couleurs de texte spécifiques */
+.simulation-page .text-gray-800 {
+  color: #1f2937 !important;
+}
+
+.simulation-page .text-gray-700 {
+  color: #374151 !important;
+}
+
+.simulation-page .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.simulation-page .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+/* Couleurs de fond */
+.simulation-page .bg-white {
+  background-color: #ffffff !important;
+}
+
+.simulation-page .bg-gray-50 {
+  background-color: #f9fafb !important;
+}
+
+.simulation-page .bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+
+/* Boutons */
+.simulation-page .bg-blue-600 {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.simulation-page .bg-green-600 {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.simulation-page .bg-red-600 {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+/* Bordures */
+.simulation-page .border {
+  border-color: #d1d5db !important;
+}
+
+.simulation-page .border-red-200 {
+  border-color: #fecaca !important;
+}
+
+/* Messages d'erreur */
+.simulation-page .text-red-800 {
+  color: #991b1b !important;
+}
+
+.simulation-page .text-red-700 {
+  color: #b91c1c !important;
+}
+
+.simulation-page .bg-red-50 {
+  background-color: #fef2f2 !important;
+}
+
+/* Messages de succès */
+.simulation-page .text-green-600 {
+  color: #16a34a !important;
+}
+
+.simulation-page .text-blue-600 {
+  color: #2563eb !important;
+}
+
+.simulation-page .text-yellow-600 {
+  color: #ca8a04 !important;
+}

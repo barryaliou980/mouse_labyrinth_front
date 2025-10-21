@@ -1,0 +1,96 @@
+/* Styles spécifiques pour la page de gestion */
+.management-page {
+  color: #111827 !important;
+  background-color: #f9fafb;
+  min-height: 100vh;
+}
+
+.management-page h1,
+.management-page h2,
+.management-page h3,
+.management-page h4,
+.management-page h5,
+.management-page h6 {
+  color: #111827 !important;
+}
+
+.management-page p,
+.management-page div,
+.management-page span {
+  color: #111827 !important;
+}
+
+.management-page button {
+  color: #ffffff !important;
+}
+
+.management-page .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.management-page .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.management-page .bg-gray-50 {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+.management-page .border {
+  border-color: #d1d5db !important;
+}
+
+/* Styles pour les onglets */
+.management-page button {
+  color: #4b5563 !important;
+  background-color: transparent !important;
+}
+
+.management-page button:hover {
+  color: #111827 !important;
+  background-color: #f3f4f6 !important;
+}
+
+.management-page button.border-b-2 {
+  color: #1d4ed8 !important;
+  border-bottom-color: #1d4ed8 !important;
+}
+
+/* Styles pour les textes dans les cartes */
+.management-page .text-sm {
+  color: #4b5563 !important;
+}
+
+.management-page .text-xs {
+  color: #6b7280 !important;
+}
+
+/* Styles pour les titres */
+.management-page .text-2xl {
+  color: #111827 !important;
+}
+
+.management-page .text-xl {
+  color: #111827 !important;
+}
+
+.management-page .text-lg {
+  color: #111827 !important;
+}
+
+/* Styles pour les boutons */
+.management-page .bg-blue-500 {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+.management-page .bg-green-500 {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+}
+
+.management-page .bg-red-500 {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+}

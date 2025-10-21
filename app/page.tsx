@@ -1,26 +1,12 @@
 import React from 'react'
 import Link from 'next/link'
+import Layout from '@/components/Layout'
 import { Github, Zap, Grid3x3, Play, Brain, Target, Users } from 'lucide-react'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Souris IA - Labyrinthe</h1>
-            </div>
-            <Link 
-              href="/simulation"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-            >
-              Commencer la simulation
-            </Link>
-          </div>
-        </div>
-      </header>
+    <Layout>
+      <div className="min-h-screen bg-gray-50" style={{ color: '#111827' }}>
 
       {/* Section Héros */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
@@ -130,6 +116,7 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </Layout>
   )
 }

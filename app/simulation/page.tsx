@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Layout from '@/components/Layout';
 import { RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import MazeGrid from './components/MazeGrid';
 import SimulationPanel from './components/SimulationPanel';
 import ResultsModal from './components/ResultsModal';
 import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus } from '@/lib/types';
-import { ClientSimulation } from '@/lib/clientSimulation';
+import { PythonSimulation } from '@/lib/pythonSimulation';
 import { getAllMockLabyrinths, getMockLabyrinthById } from '@/lib/mockData';
 import { getRulesById } from '@/lib/rules';
+import './simulation.css';
 
 export default function SimulationPage() {
   const [labyrinths, setLabyrinths] = useState<Labyrinth[]>([]);
@@ -17,7 +19,7 @@ export default function SimulationPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
-  const [clientSimulation, setClientSimulation] = useState<ClientSimulation | null>(null);
+  const [pythonSimulation, setPythonSimulation] = useState<PythonSimulation | null>(null);
   const [showResultsModal, setShowResultsModal] = useState(false);
   const [winner, setWinner] = useState<Mouse | null>(null);
 
@@ -65,39 +67,20 @@ export default function SimulationPage() {
   };
 
   const startSimulation = async (config: SimulationConfig) => {
+    console.log('[DEBUG] startSimulation appelé avec config:', config);
     try {
       setIsLoading(true);
       setError(null);
       addLog('Démarrage de la simulation...');
       
-      // Essayer d'abord l'API
-      try {
-        const response = await fetch('/api/simulation/start', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(config),
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          setCurrentSimulation(data.data);
-          setIsRunning(true);
-          addLog(`Simulation démarrée avec ${config.mice.length} souris (API)`);
-          
-          // Démarrer la boucle de simulation
-          startSimulationLoop(data.data.id);
-          return;
-        }
-      } catch (apiError) {
-        console.log('API non disponible, utilisation de la simulation côté client');
-      }
+      // Utiliser directement la simulation Python (pas l'API Next.js)
+      console.log('Démarrage de la simulation avec l\'API Python...');
       
-      // Fallback vers la simulation côté client
-      const labyrinth = getMockLabyrinthById(config.labyrinthId);
+      // Créer la simulation avec l'API Python
+      const labyrinth = labyrinths.find(l => l.id === config.labyrinthId);
       if (!labyrinth) {
+        console.log('Labyrinthes disponibles:', labyrinths.map(l => ({ id: l.id, name: l.name })));
+        console.log('ID recherché:', config.labyrinthId);
         throw new Error('Labyrinthe non trouvé');
       }
       
@@ -139,13 +122,13 @@ export default function SimulationPage() {
       
       setCurrentSimulation(simulation);
       setIsRunning(true);
-      addLog(`Simulation démarrée avec ${config.mice.length} souris (mode client)`);
+      addLog(`Simulation démarrée avec ${config.mice.length} souris (API Python)`);
       
-      // Démarrer la simulation côté client
-      const clientSim = new ClientSimulation(simulation);
-      setClientSimulation(clientSim);
+      // Démarrer la simulation avec l'API Python
+      const pythonSim = new PythonSimulation(simulation);
+      setPythonSimulation(pythonSim);
       
-      clientSim.start(
+      pythonSim.start(
         (updatedSimulation) => {
           setCurrentSimulation(updatedSimulation);
           
@@ -185,61 +168,19 @@ export default function SimulationPage() {
     }
   };
 
-  const startSimulationLoop = async (simulationId: string) => {
-    const interval = setInterval(async () => {
-      if (!isRunning) {
-        clearInterval(interval);
-        return;
-      }
-      
-      try {
-        // Récupérer le statut de la simulation
-        const statusResponse = await fetch(`/api/simulation/status?id=${simulationId}`);
-        const statusData = await statusResponse.json();
-        
-        if (statusData.success) {
-          setCurrentSimulation(prev => ({
-            ...prev!,
-            ...statusData.data
-          }));
-          
-          // Vérifier si la simulation est terminée
-          if (statusData.data.status === 'completed') {
-            setIsRunning(false);
-            addLog('Simulation terminée');
-            clearInterval(interval);
-            
-            // Récupérer les résultats
-            const resultsResponse = await fetch(`/api/simulation/results?id=${simulationId}`);
-            const resultsData = await resultsResponse.json();
-            
-            if (resultsData.success) {
-              setCurrentSimulation(prev => ({
-                ...prev!,
-                results: resultsData.data
-              }));
-              addLog('Résultats récupérés');
-            }
-          }
-        }
-      } catch (err) {
-        addLog(`Erreur lors de la mise à jour: ${err}`);
-      }
-    }, 1000); // Vérifier toutes les secondes
-  };
 
   const pauseSimulation = () => {
-    if (clientSimulation) {
-      clientSimulation.pause();
+    if (pythonSimulation) {
+      pythonSimulation.pause();
     }
     setIsRunning(false);
     addLog('Simulation mise en pause');
   };
 
   const stopSimulation = () => {
-    if (clientSimulation) {
-      clientSimulation.stop();
-      setClientSimulation(null);
+    if (pythonSimulation) {
+      pythonSimulation.stop();
+      setPythonSimulation(null);
     }
     setIsRunning(false);
     setCurrentSimulation(null);
@@ -277,32 +218,33 @@ export default function SimulationPage() {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${showResultsModal ? 'backdrop-blur-sm' : ''}`}>
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-gray-900">Simulation de Labyrinthe</h1>
-              {currentSimulation && (
-                <div className="flex items-center gap-2 text-sm">
-                  {getStatusIcon(currentSimulation.status)}
-                  <span className="text-gray-600">
-                    {getStatusText(currentSimulation.status)}
-                  </span>
-                </div>
-              )}
+    <Layout>
+      <div className={`simulation-page min-h-screen bg-gray-50 ${showResultsModal ? 'backdrop-blur-sm' : ''}`} style={{ color: '#111827' }}>
+        {/* Header de simulation */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center gap-4">
+                {/* <h1 className="text-2xl font-bold" style={{ color: '#111827' }}>Simulation de Labyrinthe</h1> */}
+                {currentSimulation && (
+                  <div className="flex items-center gap-2 text-sm">
+                    {getStatusIcon(currentSimulation.status)}
+                    <span style={{ color: '#4b5563' }}>
+                      {getStatusText(currentSimulation.status)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={loadLabyrinths}
+                disabled={isLoading}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+              >
+                {isLoading ? 'Chargement...' : 'Actualiser'}
+              </button>
             </div>
-            <button
-              onClick={loadLabyrinths}
-              disabled={isLoading}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
-            >
-              {isLoading ? 'Chargement...' : 'Actualiser'}
-            </button>
           </div>
         </div>
-      </header>
 
       <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all duration-300 ${showResultsModal ? 'pointer-events-none' : ''}`}>
         {error && (
@@ -331,17 +273,24 @@ export default function SimulationPage() {
           {/* Zone de visualisation */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">
+              <h2 className="text-xl font-bold text-gray-800 mb-4" style={{ color: '#111827' }}>
                 Visualisation du Labyrinthe
               </h2>
               
               {currentSimulation ? (
                 <div className="space-y-4">
-                  <MazeGrid
-                    labyrinth={currentSimulation.labyrinth}
-                    mice={currentSimulation.mice}
-                    className="flex justify-center"
-                  />
+                  {currentSimulation.labyrinth ? (
+                    <MazeGrid
+                      labyrinth={currentSimulation.labyrinth}
+                      mice={currentSimulation.mice}
+                      className="flex justify-center"
+                    />
+                  ) : (
+                    <div className="text-center py-8 text-red-600">
+                      <p>Erreur: Labyrinthe non chargé</p>
+                      <p>ID du labyrinthe: {currentSimulation.labyrinthId}</p>
+                    </div>
+                  )}
                   
                   {/* Statistiques des souris */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
@@ -377,8 +326,8 @@ export default function SimulationPage() {
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <p>Sélectionnez un labyrinthe et démarrez une simulation pour voir la visualisation</p>
+                <div className="text-center py-12 text-gray-500" style={{ color: '#6b7280' }}>
+                  <p style={{ color: '#6b7280' }}>Sélectionnez un labyrinthe et démarrez une simulation pour voir la visualisation</p>
                 </div>
               )}
             </div>
@@ -387,7 +336,7 @@ export default function SimulationPage() {
 
         {/* Logs */}
         <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Logs de Simulation</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-4" style={{ color: '#111827' }}>Logs de Simulation</h2>
           <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm h-32 overflow-y-auto">
             {logs.length === 0 ? (
               <div className="text-gray-500">Aucun log pour le moment...</div>
@@ -410,6 +359,7 @@ export default function SimulationPage() {
         simulation={currentSimulation}
         winner={winner}
       />
-    </div>
+      </div>
+    </Layout>
   );
 }

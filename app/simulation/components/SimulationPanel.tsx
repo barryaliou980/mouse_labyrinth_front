@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Pause, Square, Settings, Mouse, Brain, Target } from 'lucide-react';
 import { Labyrinth, Mouse as MouseType, Simulation, SimulationRules, IntelligenceType } from '@/lib/types';
 import { getAllRules } from '@/lib/rules';
+import './SimulationPanel.css';
 
 interface SimulationPanelProps {
   labyrinths: Labyrinth[];
@@ -108,15 +109,16 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="simulation-panel bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2" style={{ color: '#111827' }}>
           <Settings className="w-6 h-6" />
           Configuration de la Simulation
         </h2>
         <button
           onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
           className="text-sm text-blue-600 hover:text-blue-800"
+          style={{ color: '#2563eb' }}
         >
           {showAdvancedSettings ? 'Masquer' : 'Paramètres avancés'}
         </button>
@@ -125,7 +127,7 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
       <div className="space-y-6">
         {/* Sélection du labyrinthe */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{ color: '#374151' }}>
             Labyrinthe
           </label>
           <select
@@ -240,7 +242,7 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
         {/* Paramètres avancés */}
         {showAdvancedSettings && (
           <div className="border-t pt-4">
-            <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center gap-2">
+            <h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center gap-2" style={{ color: '#111827' }}>
               <Brain className="w-5 h-5" />
               Paramètres avancés
             </h3>

@@ -164,6 +164,16 @@ export interface DatabaseLabyrinth {
   updated_at: string;
 }
 
+export interface DatabaseSimulationRules {
+  id: string;
+  name: string;
+  description: string;
+  rules_data: any; // JSON
+  is_predefined: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DatabaseSimulation {
   id: string;
   labyrinth_id: string;

@@ -43,15 +43,33 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Créer la simulation dans la base de données
+    // Pour les règles prédéfinies, on ne les stocke pas en base
+    // On utilise la simulation côté client
     const simulationId = uuidv4();
-    const simulation = await createSimulation({
-      id: simulationId,
-      labyrinth_id: labyrinthId,
-      rules_id: rulesId,
-      start_time: new Date().toISOString(),
-      status: 'running'
-    });
+    
+    // Vérifier si c'est une règle prédéfinie (pas d'UUID)
+    const isPredefinedRule = !rulesId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    
+    let simulation;
+    if (isPredefinedRule) {
+      // Pour les règles prédéfinies, créer une simulation côté client
+      simulation = {
+        id: simulationId,
+        labyrinth_id: labyrinthId,
+        rules_id: rulesId,
+        start_time: new Date().toISOString(),
+        status: 'running'
+      };
+    } else {
+      // Pour les règles personnalisées, les stocker en base
+      simulation = await createSimulation({
+        id: simulationId,
+        labyrinth_id: labyrinthId,
+        rules_id: rulesId,
+        start_time: new Date().toISOString(),
+        status: 'running'
+      });
+    }
     
     // Créer les souris
     const createdMice: Mouse[] = [];
@@ -70,20 +88,6 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      const dbMouse = await createMouse({
-        id: mouseId,
-        simulation_id: simulationId,
-        name: mouseData.name,
-        intelligence_type: mouseData.intelligenceType,
-        initial_position: mouseData.startPosition,
-        health: rules.maxEnergy,
-        happiness: rules.maxHappiness,
-        energy: rules.maxEnergy,
-        cheese_found: 0,
-        moves: 0,
-        is_alive: true
-      });
-      
       // Transformer en format Mouse
       const mouse: Mouse = {
         id: mouseId,
@@ -97,6 +101,23 @@ export async function POST(request: NextRequest) {
         moves: 0,
         isAlive: true
       };
+      
+      // Pour les règles prédéfinies, ne pas stocker en base
+      if (!isPredefinedRule) {
+        const dbMouse = await createMouse({
+          id: mouseId,
+          simulation_id: simulationId,
+          name: mouseData.name,
+          intelligence_type: mouseData.intelligenceType,
+          initial_position: mouseData.startPosition,
+          health: rules.maxEnergy,
+          happiness: rules.maxHappiness,
+          energy: rules.maxEnergy,
+          cheese_found: 0,
+          moves: 0,
+          is_alive: true
+        });
+      }
       
       createdMice.push(mouse);
     }

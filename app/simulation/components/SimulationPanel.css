@@ -1,0 +1,95 @@
+/* Styles pour SimulationPanel */
+.simulation-panel {
+  color: #111827 !important;
+}
+
+.simulation-panel h2,
+.simulation-panel h3,
+.simulation-panel h4,
+.simulation-panel h5,
+.simulation-panel h6 {
+  color: #111827 !important;
+}
+
+.simulation-panel label {
+  color: #374151 !important;
+}
+
+.simulation-panel .text-sm {
+  color: #4b5563 !important;
+}
+
+.simulation-panel .text-gray-700 {
+  color: #374151 !important;
+}
+
+.simulation-panel .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.simulation-panel .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.simulation-panel .text-blue-600 {
+  color: #2563eb !important;
+}
+
+.simulation-panel .text-green-600 {
+  color: #16a34a !important;
+}
+
+.simulation-panel .text-red-600 {
+  color: #dc2626 !important;
+}
+
+.simulation-panel .text-yellow-600 {
+  color: #ca8a04 !important;
+}
+
+.simulation-panel .bg-white {
+  background-color: #ffffff !important;
+}
+
+.simulation-panel .bg-gray-50 {
+  background-color: #f9fafb !important;
+}
+
+.simulation-panel .bg-blue-600 {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.simulation-panel .bg-green-600 {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.simulation-panel .bg-red-600 {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+.simulation-panel .bg-gray-600 {
+  background-color: #4b5563 !important;
+  color: #ffffff !important;
+}
+
+.simulation-panel .border {
+  border-color: #d1d5db !important;
+}
+
+.simulation-panel input,
+.simulation-panel select,
+.simulation-panel textarea {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+}
+
+.simulation-panel input:disabled,
+.simulation-panel select:disabled,
+.simulation-panel textarea:disabled {
+  color: #6b7280 !important;
+  background-color: #f3f4f6 !important;
+}
