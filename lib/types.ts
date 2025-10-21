@@ -130,7 +130,7 @@ export interface EnvironmentContext {
 // Types pour les WebSocket
 export interface SimulationUpdate {
   type: 'mouse_move' | 'cheese_found' | 'mouse_died' | 'turn_complete' | 'simulation_end';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: string;
   turn: number;
 }
@@ -159,7 +159,7 @@ export interface DatabaseLabyrinth {
   id: string;
   name: string;
   description: string;
-  grid_data: any; // JSON
+  grid_data: Record<string, unknown>; // JSON
   created_at: string;
   updated_at: string;
 }
@@ -168,7 +168,7 @@ export interface DatabaseSimulationRules {
   id: string;
   name: string;
   description: string;
-  rules_data: any; // JSON
+  rules_data: Record<string, unknown>; // JSON
   is_predefined: boolean;
   created_at: string;
   updated_at: string;
@@ -181,7 +181,7 @@ export interface DatabaseSimulation {
   start_time: string;
   end_time?: string;
   status: string;
-  results?: any; // JSON
+  results?: Record<string, unknown>; // JSON
 }
 
 export interface DatabaseMouse {
@@ -189,8 +189,8 @@ export interface DatabaseMouse {
   simulation_id: string;
   name: string;
   intelligence_type: string;
-  initial_position: any; // JSON
-  final_position?: any; // JSON
+  initial_position: Record<string, unknown>; // JSON
+  final_position?: Record<string, unknown>; // JSON
   health: number;
   happiness: number;
   energy: number;

@@ -325,6 +325,10 @@ export async function deleteSimulationRule(id: string) {
 
 // Simulations
 export async function getSimulations() {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized');
+  }
+  
   const { data, error } = await supabase
     .from('simulations')
     .select(`
@@ -534,7 +538,7 @@ export async function initializeDatabase() {
         await createSimulationRule({
           name: rule.name,
           description: rule.description,
-          rules_data: rule,
+          rules_data: rule as unknown as Record<string, unknown>,
           is_predefined: true
         });
       }

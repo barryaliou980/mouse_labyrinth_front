@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     
     // Sauvegarder les résultats
     await updateSimulation(simulationId, {
-      results: results
+      results: results as unknown as Record<string, unknown>
     });
     
     return NextResponse.json({

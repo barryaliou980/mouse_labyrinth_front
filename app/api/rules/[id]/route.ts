@@ -8,10 +8,11 @@ import {
 // GET /api/rules/[id] - Récupérer une règle par ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const rule = await getSimulationRuleById(params.id);
+    const { id } = await params;
+    const rule = await getSimulationRuleById(id);
     
     // Transformer les données de la base vers le format attendu
     const formattedRule = {
@@ -49,9 +50,10 @@ export async function GET(
 // PUT /api/rules/[id] - Mettre à jour une règle
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { name, description, turnDuration, energyConsumption, happinessDecay, isolationPenalty, cheeseBonus, proximityBonus, maxEnergy, maxHappiness, winConditions } = body;
 
@@ -67,7 +69,7 @@ export async function PUT(
       winConditions: winConditions || []
     };
 
-    const updatedRule = await updateSimulationRule(params.id, {
+    const updatedRule = await updateSimulationRule(id, {
       name,
       description,
       rules_data: rulesData,
@@ -110,10 +112,11 @@ export async function PUT(
 // DELETE /api/rules/[id] - Supprimer une règle
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await deleteSimulationRule(params.id);
+    const { id } = await params;
+    await deleteSimulationRule(id);
     return NextResponse.json({
       success: true,
       message: 'Rule deleted successfully'

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const dbSimulation = await getSimulationById(simulationId);
     
     // Transformer les souris de la base vers le format attendu
-    const mice: Mouse[] = dbSimulation.mice.map((dbMouse) => ({
+    const mice: Mouse[] = dbSimulation.mice.map((dbMouse: any) => ({
       id: dbMouse.id,
       name: dbMouse.name,
       position: dbMouse.final_position || dbMouse.initial_position,

@@ -192,7 +192,7 @@ export const createMouseMoveUpdate = (
       fromPosition,
       toPosition,
       direction
-    } as MouseMoveUpdate,
+    } as Record<string, unknown>,
     timestamp: new Date().toISOString(),
     turn
   };
@@ -210,7 +210,7 @@ export const createCheeseFoundUpdate = (
       mouseId,
       position,
       cheeseCount
-    } as CheeseFoundUpdate,
+    } as Record<string, unknown>,
     timestamp: new Date().toISOString(),
     turn
   };
@@ -228,7 +228,7 @@ export const createMouseDiedUpdate = (
       mouseId,
       position,
       cause
-    } as MouseDiedUpdate,
+    } as Record<string, unknown>,
     timestamp: new Date().toISOString(),
     turn
   };

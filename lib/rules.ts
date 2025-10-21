@@ -161,7 +161,7 @@ export function getAllRules(): SimulationRules[] {
 
 // Fonction pour valider les conditions de victoire
 export function checkWinConditions(
-  mouse: any,
+  mouse: { cheeseFound: number; energy: number; happiness: number },
   rules: SimulationRules,
   currentTurn: number
 ): boolean {
@@ -189,13 +189,13 @@ export function checkWinConditions(
 
 // Fonction pour calculer les effets d'un tour
 export function applyTurnEffects(
-  mouse: any,
+  mouse: { health: number; happiness: number; energy: number; cheeseFound: number; isAlive: boolean },
   rules: SimulationRules,
   environment: {
     hasOtherMiceNearby: boolean;
     foundCheese: boolean;
   }
-): any {
+): { health: number; happiness: number; energy: number; cheeseFound: number; isAlive: boolean } {
   const updatedMouse = { ...mouse };
   
   // Consommation d'énergie de base

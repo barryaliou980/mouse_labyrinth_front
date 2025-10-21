@@ -97,7 +97,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                 <span className="font-semibold text-gray-700">Durée</span>
               </div>
               <p className="text-2xl font-bold text-blue-600">
-                {formatDuration(simulation.startTime, simulation.endTime)}
+                {formatDuration(simulation.startTime || new Date().toISOString(), simulation.endTime)}
               </p>
             </div>
 

@@ -4,8 +4,10 @@ import { MockIA } from '@/lib/mockIA';
 
 // POST /api/ia/move - Proxy vers le serveur Python IA
 export async function POST(request: NextRequest) {
+  let body: IARequest = {} as IARequest;
+  
   try {
-    const body: IARequest = await request.json();
+    body = await request.json();
     
     // Validation des données
     if (!body.mouseId || !body.position || !body.environment || !body.mouseState) {

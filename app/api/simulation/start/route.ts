@@ -63,7 +63,6 @@ export async function POST(request: NextRequest) {
     } else {
       // Pour les règles personnalisées, les stocker en base
       simulation = await createSimulation({
-        id: simulationId,
         labyrinth_id: labyrinthId,
         rules_id: rulesId,
         start_time: new Date().toISOString(),
@@ -105,7 +104,6 @@ export async function POST(request: NextRequest) {
       // Pour les règles prédéfinies, ne pas stocker en base
       if (!isPredefinedRule) {
         const dbMouse = await createMouse({
-          id: mouseId,
           simulation_id: simulationId,
           name: mouseData.name,
           intelligence_type: mouseData.intelligenceType,
