@@ -39,6 +39,7 @@ export default function SimulationPage() {
         const data = await response.json();
         
         if (data.success) {
+          console.log('Labyrinths chargés depuis l\'API:', data.data);
           setLabyrinths(data.data);
           addLog('Labyrinths chargés depuis l\'API');
           return;
@@ -49,6 +50,7 @@ export default function SimulationPage() {
       
       // Fallback vers les données mockées
       const mockLabyrinths = getAllMockLabyrinths();
+      console.log('Labyrinths mockés chargés:', mockLabyrinths);
       setLabyrinths(mockLabyrinths);
       addLog('Labyrinths chargés depuis les données mockées');
       

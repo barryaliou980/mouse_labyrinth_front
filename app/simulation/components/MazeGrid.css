@@ -1,0 +1,91 @@
+/* Styles pour MazeGrid */
+.maze-grid {
+  color: #111827 !important;
+}
+
+.maze-grid .cell {
+  border: 1px solid #d1d5db !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  min-width: 30px;
+  min-height: 30px;
+}
+
+/* Couleurs des cellules */
+.maze-grid .cell-wall {
+  background-color: #1f2937 !important; /* bg-gray-800 */
+  color: #ffffff !important;
+}
+
+.maze-grid .cell-path {
+  background-color: #f3f4f6 !important; /* bg-gray-100 */
+  color: #111827 !important;
+}
+
+.maze-grid .cell-cheese {
+  background-color: #fbbf24 !important; /* bg-yellow-400 */
+  color: #111827 !important;
+}
+
+.maze-grid .cell-start {
+  background-color: #4ade80 !important; /* bg-green-400 */
+  color: #111827 !important;
+}
+
+/* Souris */
+.maze-grid .mouse {
+  background-color: #ef4444 !important; /* bg-red-500 */
+  color: #ffffff !important;
+  border-radius: 50%;
+  font-size: 16px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Grille */
+.maze-grid .grid {
+  display: grid;
+  gap: 1px;
+  background-color: #d1d5db !important;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+/* Titre */
+.maze-grid h3 {
+  color: #111827 !important;
+  font-weight: 700 !important;
+  margin-bottom: 16px;
+}
+
+/* Statistiques */
+.maze-grid .stats {
+  color: #111827 !important;
+}
+
+.maze-grid .stats h4 {
+  color: #111827 !important;
+  font-weight: 600 !important;
+}
+
+.maze-grid .stats p {
+  color: #374151 !important;
+}
+
+.maze-grid .stats .text-green-600 {
+  color: #16a34a !important;
+}
+
+.maze-grid .stats .text-red-600 {
+  color: #dc2626 !important;
+}
+
+.maze-grid .stats .text-blue-600 {
+  color: #2563eb !important;
+}

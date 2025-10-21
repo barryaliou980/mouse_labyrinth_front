@@ -28,48 +28,84 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
   React.useEffect(() => {
     const newGrid = Array(height).fill(null).map((_, y) => 
       Array(width).fill(null).map((_, x) => 
-        grid[y] && grid[y][x] ? grid[y][x] : 'path'
+        grid[y]?.[x] || 'path'
       )
     );
     setGrid(newGrid);
   }, [width, height]);
 
   const handleCellClick = (x: number, y: number) => {
-    const newGrid = grid.map(row => [...row]);
+    const newGrid = [...grid];
     newGrid[y][x] = selectedCellType;
     setGrid(newGrid);
+  };
 
-    // Gérer les positions spéciales
-    if (selectedCellType === 'start') {
-      setStartPositions([{ x, y }]);
-    } else if (selectedCellType === 'cheese') {
-      setCheesePositions(prev => [...prev, { x, y }]);
+  const getCellColor = (cellType: CellType): string => {
+    switch (cellType) {
+      case 'wall':
+        return 'bg-gray-800';
+      case 'path':
+        return 'bg-gray-100';
+      case 'cheese':
+        return 'bg-yellow-400';
+      case 'start':
+        return 'bg-green-400';
+      default:
+        return 'bg-gray-100';
+    }
+  };
+
+  const getCellIcon = (cellType: CellType): string => {
+    switch (cellType) {
+      case 'cheese':
+        return '🧀';
+      case 'start':
+        return '🚪';
+      default:
+        return '';
     }
   };
 
   const handleSave = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    if (!name.trim()) {
+      setError('Le nom est requis');
+      return;
+    }
 
-      const labyrinthData = {
-        name,
-        description,
+    if (startPositions.length === 0) {
+      setError('Au moins une position de départ est requise');
+      return;
+    }
+
+    if (cheesePositions.length === 0) {
+      setError('Au moins une position de fromage est requise');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const labyrinthData: Labyrinth = {
+        id: labyrinth?.id || `labyrinth-${Date.now()}`,
+        name: name.trim(),
+        description: description.trim(),
         width,
         height,
         grid,
         startPositions,
-        cheesePositions
+        cheesePositions,
+        createdAt: labyrinth?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
-      let savedLabyrinth: Labyrinth;
       if (labyrinth) {
-        savedLabyrinth = await LabyrinthService.update(labyrinth.id, labyrinthData);
+        await LabyrinthService.update(labyrinth.id, labyrinthData);
       } else {
-        savedLabyrinth = await LabyrinthService.create(labyrinthData);
+        await LabyrinthService.create(labyrinthData);
       }
 
-      onSave?.(savedLabyrinth);
+      onSave?.(labyrinthData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
     } finally {
@@ -77,143 +113,282 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
     }
   };
 
-  const getCellColor = (cellType: CellType) => {
-    switch (cellType) {
-      case 'wall': return 'bg-gray-800';
-      case 'path': return 'bg-white';
-      case 'start': return 'bg-green-500';
-      case 'cheese': return 'bg-yellow-500';
-      default: return 'bg-white';
+  const handleDelete = async () => {
+    if (!labyrinth) return;
+
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le labyrinthe "${labyrinth.name}" ?`)) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await LabyrinthService.delete(labyrinth.id);
+      onSave?.(labyrinth);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6">
-        {labyrinth ? 'Modifier le labyrinthe' : 'Créer un nouveau labyrinthe'}
-      </h2>
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h2 className="text-2xl font-bold mb-6" style={{ color: '#111827' }}>
+          {labyrinth ? 'Modifier le Labyrinthe' : 'Nouveau Labyrinthe'}
+        </h2>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Formulaire */}
-        <div className="lg:col-span-1">
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Formulaire */}
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-2">Nom</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2" style={{ color: '#374151' }}>
+                Nom *
+              </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Nom du labyrinthe"
+                style={{ color: '#111827' }}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2" style={{ color: '#374151' }}>
+                Description
+              </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-2 border rounded h-20"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Description du labyrinthe"
+                rows={3}
+                style={{ color: '#111827' }}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Largeur</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2" style={{ color: '#374151' }}>
+                  Largeur
+                </label>
                 <input
                   type="number"
                   value={width}
-                  onChange={(e) => setWidth(parseInt(e.target.value) || 10)}
-                  className="w-full p-2 border rounded"
+                  onChange={(e) => setWidth(Math.max(5, Math.min(50, parseInt(e.target.value) || 5)))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   min="5"
                   max="50"
+                  style={{ color: '#111827' }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Hauteur</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2" style={{ color: '#374151' }}>
+                  Hauteur
+                </label>
                 <input
                   type="number"
                   value={height}
-                  onChange={(e) => setHeight(parseInt(e.target.value) || 10)}
-                  className="w-full p-2 border rounded"
+                  onChange={(e) => setHeight(Math.max(5, Math.min(50, parseInt(e.target.value) || 5)))}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   min="5"
                   max="50"
+                  style={{ color: '#111827' }}
                 />
               </div>
             </div>
 
+            {/* Contrôles d'édition */}
             <div>
-              <label className="block text-sm font-medium mb-2">Type de cellule</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2" style={{ color: '#374151' }}>
+                Type de cellule
+              </label>
               <div className="grid grid-cols-2 gap-2">
-                {(['wall', 'path', 'start', 'cheese'] as CellType[]).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setSelectedCellType(type)}
-                    className={`p-2 rounded text-sm ${
-                      selectedCellType === type
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-200 hover:bg-gray-300'
-                    }`}
-                  >
-                    {type === 'wall' && 'Mur'}
-                    {type === 'path' && 'Chemin'}
-                    {type === 'start' && 'Départ'}
-                    {type === 'cheese' && 'Fromage'}
-                  </button>
-                ))}
+                <button
+                  onClick={() => setSelectedCellType('wall')}
+                  className={`p-3 rounded-lg border-2 ${
+                    selectedCellType === 'wall' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gray-800 rounded"></div>
+                    <span style={{ color: '#111827' }}>Mur</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setSelectedCellType('path')}
+                  className={`p-3 rounded-lg border-2 ${
+                    selectedCellType === 'path' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gray-100 rounded"></div>
+                    <span style={{ color: '#111827' }}>Chemin</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setSelectedCellType('start')}
+                  className={`p-3 rounded-lg border-2 ${
+                    selectedCellType === 'start' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-400 rounded"></div>
+                    <span style={{ color: '#111827' }}>Départ</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setSelectedCellType('cheese')}
+                  className={`p-3 rounded-lg border-2 ${
+                    selectedCellType === 'cheese' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-yellow-400 rounded"></div>
+                    <span style={{ color: '#111827' }}>Fromage</span>
+                  </div>
+                </button>
               </div>
             </div>
 
-            <div className="text-sm text-gray-600">
-              <p>Positions de départ: {startPositions.length}</p>
-              <p>Fromages: {cheesePositions.length}</p>
-            </div>
+            {/* Positions spéciales */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" style={{ color: '#374151' }}>
+                  Positions de départ
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {startPositions.map((pos, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      <span>({pos.x}, {pos.y})</span>
+                      <button
+                        onClick={() => setStartPositions(prev => prev.filter((_, i) => i !== index))}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                disabled={loading || !name || !description}
-                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" style={{ color: '#374151' }}>
+                  Positions de fromage
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {cheesePositions.map((pos, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      <span>({pos.x}, {pos.y})</span>
+                      <button
+                        onClick={() => setCheesePositions(prev => prev.filter((_, i) => i !== index))}
+                        className="text-yellow-600 hover:text-yellow-800"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Grille */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold" style={{ color: '#111827' }}>
+              Grille du labyrinthe
+            </h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div 
+                className="grid gap-1 mx-auto"
+                style={{ 
+                  gridTemplateColumns: `repeat(${width}, 1fr)`,
+                  gridTemplateRows: `repeat(${height}, 1fr)`,
+                  maxWidth: '400px'
+                }}
               >
-                {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-              </button>
-              <button
-                onClick={onCancel}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Annuler
-              </button>
+                {Array.from({ length: height }, (_, y) =>
+                  Array.from({ length: width }, (_, x) => {
+                    const cellType = grid[y]?.[x] || 'path';
+                    return (
+                      <div
+                        key={`${x}-${y}`}
+                        className={`
+                          w-8 h-8 flex items-center justify-center text-xs
+                          border border-gray-300 cursor-pointer
+                          ${getCellColor(cellType)}
+                          hover:opacity-80 transition-opacity
+                        `}
+                        onClick={() => handleCellClick(x, y)}
+                        title={`Position (${x}, ${y}) - ${cellType}`}
+                      >
+                        <span className="text-lg">
+                          {getCellIcon(cellType)}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Grille */}
-        <div className="lg:col-span-2">
-          <div className="border rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4">Grille du labyrinthe</h3>
-            <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${width}, 1fr)` }}>
-              {grid.map((row, y) =>
-                row.map((cell, x) => (
-                  <button
-                    key={`${x}-${y}`}
-                    onClick={() => handleCellClick(x, y)}
-                    className={`w-8 h-8 border ${getCellColor(cell)} hover:opacity-80`}
-                    title={`${x}, ${y} - ${cell}`}
-                  />
-                ))
-              )}
-            </div>
-            <div className="mt-4 text-sm text-gray-600">
-              <p>Cliquez sur une cellule pour la modifier</p>
-              <p>Type sélectionné: {selectedCellType}</p>
-            </div>
+        {/* Messages d'erreur */}
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800" style={{ color: '#dc2626' }}>{error}</p>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="mt-8 flex justify-between">
+          <div>
+            {labyrinth && (
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                style={{ backgroundColor: '#dc2626', color: '#ffffff' }}
+                disabled={loading}
+              >
+                🗑️ Supprimer
+              </button>
+            )}
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={onCancel}
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              disabled={loading}
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
+              disabled={loading}
+            >
+              {loading ? 'Sauvegarde...' : (labyrinth ? 'Mettre à jour' : 'Créer')}
+            </button>
           </div>
         </div>
       </div>

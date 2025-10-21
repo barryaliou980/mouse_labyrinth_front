@@ -3,6 +3,7 @@
 import React from 'react';
 import { Labyrinth, Mouse, CellType } from '@/lib/types';
 import MouseComponent from './Mouse';
+import './MazeGrid.css';
 
 interface MazeGridProps {
   labyrinth: Labyrinth;
@@ -17,18 +18,18 @@ const MazeGrid: React.FC<MazeGridProps> = ({
   onCellClick,
   className = ''
 }) => {
-  const getCellColor = (cellType: CellType): string => {
+  const getCellClass = (cellType: CellType): string => {
     switch (cellType) {
       case 'wall':
-        return 'bg-gray-800';
+        return 'cell cell-wall';
       case 'path':
-        return 'bg-gray-100';
+        return 'cell cell-path';
       case 'cheese':
-        return 'bg-yellow-400';
+        return 'cell cell-cheese';
       case 'start':
-        return 'bg-green-400';
+        return 'cell cell-start';
       default:
-        return 'bg-gray-100';
+        return 'cell cell-path';
     }
   };
 
@@ -57,7 +58,7 @@ const MazeGrid: React.FC<MazeGridProps> = ({
 
   return (
     <div className={`maze-grid ${className}`}>
-      <div className="grid gap-0 border-2 border-gray-800" 
+      <div className="grid" 
            style={{ 
              gridTemplateColumns: `repeat(${labyrinth.width}, 1fr)`,
              gridTemplateRows: `repeat(${labyrinth.height}, 1fr)`
@@ -73,9 +74,7 @@ const MazeGrid: React.FC<MazeGridProps> = ({
               <div
                 key={`${x}-${y}`}
                 className={`
-                  relative w-8 h-8 flex items-center justify-center text-xs
-                  border border-gray-300 cursor-pointer
-                  ${getCellColor(cellType)}
+                  ${getCellClass(cellType)}
                   ${onCellClick ? 'hover:opacity-80' : ''}
                   transition-all duration-200
                 `}
@@ -84,7 +83,7 @@ const MazeGrid: React.FC<MazeGridProps> = ({
               >
                 {/* Contenu de la cellule */}
                 {mouse ? (
-                  <MouseComponent mouse={mouse} />
+                  <div className="mouse">🐭</div>
                 ) : (
                   <span className="text-lg">
                     {getCellIcon(cellType)}
