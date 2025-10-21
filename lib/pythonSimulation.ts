@@ -200,7 +200,16 @@ export class PythonSimulation {
       }
       
     } catch (error) {
-      this.log(`Erreur lors du traitement de ${mouse.name}: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Gestion spécifique de l'erreur hasOtherMiceNearby
+      if (errorMessage.includes('hasOtherMiceNearby')) {
+        this.log(`❌ ERREUR API PYTHON: ${mouse.name} - Problème de communication avec l'API Python`);
+        this.log(`🔧 Solution: Vérifiez que l'API Python est démarrée sur le port 8000`);
+        this.log(`📡 Détails: ${errorMessage}`);
+      } else {
+        this.log(`Erreur lors du traitement de ${mouse.name}: ${errorMessage}`);
+      }
     }
   }
 
@@ -230,7 +239,8 @@ export class PythonSimulation {
           energy: mouse.energy,
           cheeseFound: mouse.cheeseFound
         },
-        availableMoves
+        availableMoves,
+        available_cheeses: uncollectedCheeses // Passer les fromages disponibles pour l'optimisation
       };
 
       const response = await PythonApiClient.getMouseMove(request);

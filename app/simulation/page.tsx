@@ -163,8 +163,17 @@ export default function SimulationPage() {
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(errorMessage);
-      addLog(`Erreur: ${errorMessage}`);
+      
+      // Gestion spécifique de l'erreur hasOtherMiceNearby
+      if (errorMessage.includes('hasOtherMiceNearby')) {
+        setError(`❌ ERREUR API PYTHON: Problème de communication avec l'API Python. Vérifiez que l'API Python est démarrée sur le port 8000. Détails: ${errorMessage}`);
+        addLog(`❌ ERREUR API PYTHON: Problème de communication avec l'API Python`);
+        addLog(`🔧 Solution: Vérifiez que l'API Python est démarrée sur le port 8000`);
+        addLog(`📡 Détails: ${errorMessage}`);
+      } else {
+        setError(errorMessage);
+        addLog(`Erreur: ${errorMessage}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -337,6 +346,23 @@ export default function SimulationPage() {
         </div>
 
         {/* Logs */}
+        {/* Section d'erreurs API Python */}
+        {error && (
+          <div className="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-xl font-bold text-red-800 mb-4" style={{ color: '#dc2626' }}>
+              ⚠️ Erreur API Python
+            </h2>
+            <div className="bg-red-900 text-red-100 p-4 rounded-lg font-mono text-sm">
+              <div className="text-red-300 mb-2">Détails de l'erreur :</div>
+              <div className="text-red-100">{error}</div>
+              <div className="text-red-300 mt-2 text-xs">
+                Cette erreur indique un problème de communication avec l&apos;API Python.
+                Vérifiez que l&apos;API Python est démarrée sur le port 8000.
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4" style={{ color: '#111827' }}>Logs de Simulation</h2>
           <div 

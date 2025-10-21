@@ -21,6 +21,7 @@ export interface MouseMoveRequest {
     cheeseFound: number;
   };
   availableMoves: string[];
+  available_cheeses?: { x: number; y: number }[];
 }
 
 export interface MouseMoveResponse {

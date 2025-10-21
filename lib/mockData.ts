@@ -105,6 +105,33 @@ export const mockLabyrinths: Labyrinth[] = [
     cheesePositions: [ { x: 1, y: 9 }],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'labyrinth-ai-test',
+    name: 'Test IA Multi-Fromages',
+    description: 'Labyrinthe spécialement conçu pour tester l\'optimisation de l\'IA avec plusieurs fromages',
+    width: 10,
+    height: 10,
+    grid: [
+      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
+      ['wall', 'start', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'wall'],
+      ['wall', 'path', 'wall', 'wall', 'path', 'path', 'wall', 'wall', 'path', 'wall'],
+      ['wall', 'path', 'path', 'cheese', 'path', 'path', 'path', 'path', 'path', 'wall'],
+      ['wall', 'path', 'wall', 'path', 'wall', 'wall', 'path', 'wall', 'path', 'wall'],
+      ['wall', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'path', 'wall'],
+      ['wall', 'path', 'wall', 'path', 'wall', 'wall', 'path', 'wall', 'path', 'wall'],
+      ['wall', 'path', 'path', 'path', 'path', 'path', 'cheese', 'path', 'path', 'wall'],
+      ['wall', 'path', 'wall', 'wall', 'path', 'path', 'wall', 'wall', 'cheese', 'wall'],
+      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
+    ],
+    startPositions: [{ x: 1, y: 1 }],
+    cheesePositions: [
+      { x: 3, y: 3 },  // Fromage proche
+      { x: 6, y: 7 },  // Fromage moyen
+      { x: 8, y: 8 }   // Fromage loin
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ];
 
