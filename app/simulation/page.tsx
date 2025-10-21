@@ -287,6 +287,7 @@ export default function SimulationPage() {
               <h2 className="text-xl font-bold text-gray-800 mb-4" style={{ color: '#111827' }}>
                 Visualisation du Labyrinthe
               </h2>
+              <br/>
               
               {currentSimulation ? (
                 <div className="space-y-4">

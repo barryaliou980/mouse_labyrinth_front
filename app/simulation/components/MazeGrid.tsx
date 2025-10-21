@@ -57,6 +57,7 @@ const MazeGrid: React.FC<MazeGridProps> = ({
   };
 
   return (
+    <div>
     <div className={`maze-grid ${className}`}>
       <div className="grid" 
            style={{ 
@@ -104,24 +105,22 @@ const MazeGrid: React.FC<MazeGridProps> = ({
       </div>
       
       {/* Légende */}
-      <div className="mt-4 flex flex-wrap gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-800 rounded"></div>
-          <span>Mur</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
-          <span>Chemin</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-yellow-400 rounded"></div>
-          <span>Fromage</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-400 rounded"></div>
-          <span>Départ</span>
-        </div>
-      </div>
+   
+    </div>
+       <div className="mt-4 flex flex-wrap gap-4 text-sm">
+       <div className="flex items-center gap-2">
+         <span className="text-lg">🐭</span>
+         <span>Souris</span>
+       </div>
+       <div className="flex items-center gap-2">
+         <span className="text-lg">🧀</span>
+         <span>Fromage</span>
+       </div>
+       <div className="flex items-center gap-2">
+         <div className="w-4 h-4 bg-gray-800 rounded"></div>
+         <span>Mur</span>
+       </div>
+     </div>
     </div>
   );
 };
