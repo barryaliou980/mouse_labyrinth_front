@@ -116,7 +116,10 @@ export class ClientSimulation {
         const foundCheese = this.checkCheeseFound(mouse.position);
         if (foundCheese) {
           mouse.cheeseFound++;
-          this.log(`${mouse.name} a trouvé du fromage ! Total: ${mouse.cheeseFound}`);
+          this.log(`🎉 ${mouse.name} a trouvé du fromage ! Total: ${mouse.cheeseFound}`);
+          this.log(`🏁 Simulation terminée - ${mouse.name} a gagné !`);
+          this.stop();
+          return; // Arrêter immédiatement la simulation
         }
         
         // Appliquer les effets du tour

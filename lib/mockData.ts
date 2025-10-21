@@ -49,7 +49,7 @@ export const mockLabyrinths: Labyrinth[] = [
       ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
     ],
     startPositions: [{ x: 1, y: 1 }],
-    cheesePositions: [{ x: 13, y: 1 }, { x: 1, y: 11 }, { x: 13, y: 13 }],
+    cheesePositions: [ { x: 13, y: 13 }],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -74,7 +74,7 @@ export const mockLabyrinths: Labyrinth[] = [
       ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
     ],
     startPositions: [{ x: 1, y: 1 }, { x: 1, y: 1 }], // Deux positions de départ pour les interactions
-    cheesePositions: [{ x: 10, y: 1 }, { x: 1, y: 9 }],
+    cheesePositions: [ { x: 1, y: 9 }],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }

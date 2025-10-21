@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import MazeGrid from './components/MazeGrid';
 import SimulationPanel from './components/SimulationPanel';
+import ResultsModal from './components/ResultsModal';
 import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus } from '@/lib/types';
 import { ClientSimulation } from '@/lib/clientSimulation';
 import { getAllMockLabyrinths, getMockLabyrinthById } from '@/lib/mockData';
@@ -17,6 +18,8 @@ export default function SimulationPage() {
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [clientSimulation, setClientSimulation] = useState<ClientSimulation | null>(null);
+  const [showResultsModal, setShowResultsModal] = useState(false);
+  const [winner, setWinner] = useState<Mouse | null>(null);
 
   // Charger les labyrinths au montage du composant
   useEffect(() => {
@@ -145,9 +148,31 @@ export default function SimulationPage() {
       clientSim.start(
         (updatedSimulation) => {
           setCurrentSimulation(updatedSimulation);
+          
+          // Vérifier si une souris a trouvé du fromage
+          const winningMouse = updatedSimulation.mice.find(mouse => 
+            mouse.cheeseFound > 0 && updatedSimulation.status === 'completed'
+          );
+          
+          if (winningMouse) {
+            setWinner(winningMouse);
+            setShowResultsModal(true);
+            setIsRunning(false);
+          }
         },
         (message) => {
           addLog(message);
+          
+          // Détecter si le message indique qu'une souris a gagné
+          if (message.includes('🎉') && message.includes('a trouvé du fromage')) {
+            const mouseName = message.split(' ')[1]; // Extraire le nom de la souris
+            const winningMouse = simulation.mice.find(mouse => mouse.name === mouseName);
+            if (winningMouse) {
+              setWinner(winningMouse);
+              setShowResultsModal(true);
+              setIsRunning(false);
+            }
+          }
         }
       );
       
@@ -218,6 +243,8 @@ export default function SimulationPage() {
     }
     setIsRunning(false);
     setCurrentSimulation(null);
+    setShowResultsModal(false);
+    setWinner(null);
     addLog('Simulation arrêtée');
   };
 
@@ -250,7 +277,7 @@ export default function SimulationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen bg-gray-50 ${showResultsModal ? 'backdrop-blur-sm' : ''}`}>
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -277,7 +304,7 @@ export default function SimulationPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all duration-300 ${showResultsModal ? 'pointer-events-none' : ''}`}>
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center gap-2 text-red-800">
@@ -372,6 +399,17 @@ export default function SimulationPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de résultats */}
+      <ResultsModal
+        isOpen={showResultsModal}
+        onClose={() => {
+          setShowResultsModal(false);
+          setWinner(null);
+        }}
+        simulation={currentSimulation}
+        winner={winner}
+      />
     </div>
   );
 }
