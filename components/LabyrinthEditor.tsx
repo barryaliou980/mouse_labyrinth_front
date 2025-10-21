@@ -24,6 +24,10 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Vérifier si c'est un labyrinthe prédéfini (non modifiable)
+  // Seuls les labyrinthes avec "-default" dans le nom sont protégés
+  const isPredefinedLabyrinth = labyrinth && labyrinth.name.includes('-default');
+
   // Mettre à jour la grille quand les dimensions changent
   React.useEffect(() => {
     const newGrid = Array(height).fill(null).map((_, y) => 
@@ -138,6 +142,11 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold mb-6" style={{ color: '#111827' }}>
           {labyrinth ? 'Modifier le Labyrinthe' : 'Nouveau Labyrinthe'}
+          {isPredefinedLabyrinth && (
+            <span className="ml-2 text-sm font-normal text-orange-600">
+              (Labyrinthe par défaut - Lecture seule)
+            </span>
+          )}
         </h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -154,6 +163,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Nom du labyrinthe"
                 style={{ color: '#111827' }}
+                disabled={isPredefinedLabyrinth}
               />
             </div>
 
@@ -168,6 +178,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
                 placeholder="Description du labyrinthe"
                 rows={3}
                 style={{ color: '#111827' }}
+                disabled={isPredefinedLabyrinth}
               />
             </div>
 
@@ -184,6 +195,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
                   min="5"
                   max="50"
                   style={{ color: '#111827' }}
+                  disabled={isPredefinedLabyrinth}
                 />
               </div>
               <div>
@@ -198,6 +210,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
                   min="5"
                   max="50"
                   style={{ color: '#111827' }}
+                  disabled={isPredefinedLabyrinth}
                 />
               </div>
             </div>
@@ -206,6 +219,9 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2" style={{ color: '#374151' }}>
                 Type de cellule
+                {isPredefinedLabyrinth && (
+                  <span className="ml-2 text-sm text-orange-600">(Lecture seule)</span>
+                )}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -215,6 +231,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
                       ? 'border-blue-500 bg-blue-50' 
                       : 'border-gray-300 bg-white'
                   }`}
+                  disabled={isPredefinedLabyrinth}
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-gray-800 rounded"></div>
@@ -228,6 +245,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
                       ? 'border-blue-500 bg-blue-50' 
                       : 'border-gray-300 bg-white'
                   }`}
+                  disabled={isPredefinedLabyrinth}
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-gray-100 rounded"></div>
@@ -241,6 +259,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
                       ? 'border-blue-500 bg-blue-50' 
                       : 'border-gray-300 bg-white'
                   }`}
+                  disabled={isPredefinedLabyrinth}
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-green-400 rounded"></div>
@@ -254,6 +273,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
                       ? 'border-blue-500 bg-blue-50' 
                       : 'border-gray-300 bg-white'
                   }`}
+                  disabled={isPredefinedLabyrinth}
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-yellow-400 rounded"></div>
@@ -362,7 +382,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
         {/* Actions */}
         <div className="mt-8 flex justify-between">
           <div>
-            {labyrinth && (
+            {labyrinth && !isPredefinedLabyrinth && (
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
@@ -371,6 +391,11 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
               >
                 🗑️ Supprimer
               </button>
+            )}
+            {isPredefinedLabyrinth && (
+              <div className="text-sm text-gray-500 italic">
+                Ce labyrinthe par défaut ne peut pas être supprimé
+              </div>
             )}
           </div>
           <div className="flex gap-4">
@@ -385,7 +410,7 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
               onClick={handleSave}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
-              disabled={loading}
+              disabled={loading || isPredefinedLabyrinth}
             >
               {loading ? 'Sauvegarde...' : (labyrinth ? 'Mettre à jour' : 'Créer')}
             </button>

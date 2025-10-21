@@ -28,6 +28,27 @@ export const predefinedRules: { [key: string]: SimulationRules } = {
     ]
   },
   
+  multiCheese: {
+    id: 'multiCheese',
+    name: 'Multi-Fromages',
+    description: 'Règles pour labyrinthes avec plusieurs fromages à collecter',
+    turnDuration: 500,
+    energyConsumption: 1,
+    happinessDecay: 1,
+    isolationPenalty: 1,
+    cheeseBonus: 20,
+    proximityBonus: 5,
+    maxEnergy: 100,
+    maxHappiness: 100,
+    winConditions: [
+      {
+        type: 'cheese_count',
+        value: 1, // Gagne dès qu'un fromage est trouvé (logique gérée par PythonSimulation)
+        description: 'Collecter tous les fromages disponibles'
+      }
+    ]
+  },
+  
   survival: {
     id: 'survival',
     name: 'Survie',

@@ -65,11 +65,11 @@ export default function SimulationPage() {
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev.slice(-9), `[${timestamp}] ${message}`]);
+    const newLog = `[${timestamp}] ${message}`;
+    setLogs(prev => [...prev.slice(-9), newLog]);
   };
 
   const startSimulation = async (config: SimulationConfig) => {
-    console.log('[DEBUG] startSimulation appelé avec config:', config);
     try {
       setIsLoading(true);
       setError(null);
@@ -96,7 +96,7 @@ export default function SimulationPage() {
         id: `sim-${Date.now()}`,
         labyrinthId: config.labyrinthId,
         labyrinth,
-        mice: config.mice.map((mouseConfig, index) => {
+        mice: config.mice.map((mouseConfig: { name: string; intelligenceType: any; startPosition?: any }, index: number) => {
           // Utiliser les positions de départ du labyrinthe si disponible
           const startPos = labyrinth.startPositions && labyrinth.startPositions.length > 0 
             ? labyrinth.startPositions[index % labyrinth.startPositions.length]
@@ -148,8 +148,8 @@ export default function SimulationPage() {
         (message) => {
           addLog(message);
           
-          // Détecter si le message indique qu'une souris a gagné
-          if (message.includes('🎉') && message.includes('a trouvé du fromage')) {
+          // Détecter si le message indique qu'une souris a gagné (tous les fromages collectés)
+          if (message.includes('🏆') && message.includes('a collecté tous les fromages')) {
             const mouseName = message.split(' ')[1]; // Extraire le nom de la souris
             const winningMouse = simulation.mice.find(mouse => mouse.name === mouseName);
             if (winningMouse) {
@@ -339,12 +339,19 @@ export default function SimulationPage() {
         {/* Logs */}
         <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4" style={{ color: '#111827' }}>Logs de Simulation</h2>
-          <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm h-32 overflow-y-auto">
+          <div 
+            className="logs-container bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm h-32 overflow-y-auto"
+            style={{ backgroundColor: '#111827' }}
+          >
             {logs.length === 0 ? (
-              <div className="text-gray-500">Aucun log pour le moment...</div>
+              <div className="text-gray-400">
+                Aucun log pour le moment...
+              </div>
             ) : (
               logs.map((log, index) => (
-                <div key={index} className="mb-1">{log}</div>
+                <div key={index} className="mb-1">
+                  {log}
+                </div>
               ))
             )}
           </div>

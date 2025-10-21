@@ -26,6 +26,31 @@ export const mockLabyrinths: Labyrinth[] = [
     updatedAt: new Date().toISOString()
   },
   {
+    id: 'labyrinth-multi-cheese',
+    name: 'Labyrinthe Multi-Fromages',
+    description: 'Un labyrinthe avec plusieurs fromages à collecter',
+    width: 8,
+    height: 8,
+    grid: [
+      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
+      ['wall', 'start', 'path', 'path', 'path', 'path', 'cheese', 'wall'],
+      ['wall', 'path', 'wall', 'wall', 'wall', 'wall', 'path', 'wall'],
+      ['wall', 'path', 'path', 'path', 'path', 'path', 'path', 'wall'],
+      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'path', 'wall'],
+      ['wall', 'cheese', 'path', 'path', 'path', 'path', 'path', 'wall'],
+      ['wall', 'path', 'path', 'path', 'path', 'path', 'cheese', 'wall'],
+      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
+    ],
+    startPositions: [{ x: 1, y: 1 }],
+    cheesePositions: [
+      { x: 6, y: 1 },  // Fromage 1 - accessible
+      { x: 1, y: 5 },  // Fromage 2 - accessible  
+      { x: 6, y: 6 }   // Fromage 3 - accessible
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
     id: 'labyrinth-2',
     name: 'Labyrinthe Complexe',
     description: 'Un labyrinthe plus difficile avec plusieurs chemins',
@@ -49,7 +74,10 @@ export const mockLabyrinths: Labyrinth[] = [
       ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
     ],
     startPositions: [{ x: 1, y: 1 }],
-    cheesePositions: [ { x: 13, y: 13 }],
+    cheesePositions: [ 
+      { x: 1, y: 11 },  // Fromage 1
+      { x: 13, y: 13 }   // Fromage 2
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },

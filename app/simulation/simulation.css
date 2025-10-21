@@ -20,6 +20,13 @@
   color: #111827 !important;
 }
 
+/* Exception pour les logs de simulation */
+.simulation-page .logs-container,
+.simulation-page .logs-container div,
+.simulation-page .logs-container span {
+  color: #10b981 !important; /* Vert clair pour les logs */
+}
+
 /* Titres spécifiques */
 .simulation-page .text-xl {
   color: #111827 !important;

@@ -69,7 +69,7 @@ export class PythonApiClient {
   }
 
   // Convertir le labyrinthe Next.js vers le format Python
-  static convertLabyrinthToPythonFormat(labyrinth: Labyrinth): {
+  static convertLabyrinthToPythonFormat(labyrinth: Labyrinth, uncollectedCheeses?: { x: number; y: number }[]): {
     grid: string[][];
     width: number;
     height: number;
@@ -88,7 +88,10 @@ export class PythonApiClient {
             break;
           case 'cheese':
             row.push('path'); // Le fromage est sur un chemin
-            cheesePositions.push({ x, y });
+            // Utiliser les fromages non collectés si fournis, sinon tous les fromages
+            if (!uncollectedCheeses || uncollectedCheeses.some(cheese => cheese.x === x && cheese.y === y)) {
+              cheesePositions.push({ x, y });
+            }
             break;
           case 'start':
             row.push('path'); // La position de départ est un chemin
@@ -104,7 +107,7 @@ export class PythonApiClient {
       grid,
       width: labyrinth.width,
       height: labyrinth.height,
-      cheesePositions
+      cheesePositions: uncollectedCheeses || cheesePositions
     };
   }
 

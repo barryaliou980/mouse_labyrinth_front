@@ -211,3 +211,14 @@ export interface AppConfig {
   simulationTickRate: number;
   maxMicePerSimulation: number;
 }
+
+// Types pour la configuration de simulation
+export interface SimulationConfig {
+  labyrinthId: string;
+  rulesId: string;
+  mice: Array<{
+    name: string;
+    intelligenceType: IntelligenceType;
+    startPosition?: Position;
+  }>;
+}

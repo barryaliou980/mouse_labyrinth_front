@@ -8,9 +8,25 @@ export class PythonSimulation {
   private intervalId: NodeJS.Timeout | null = null;
   private onUpdate?: (simulation: Simulation) => void;
   private onLog?: (message: string) => void;
+  private collectedCheeses: Set<string> = new Set(); // Suivi des fromages collectés
 
   constructor(simulation: Simulation) {
     this.simulation = { ...simulation };
+    this.initializeCheeseTracking();
+  }
+
+  // Initialiser le suivi des fromages
+  private initializeCheeseTracking() {
+    this.collectedCheeses.clear();
+    // Marquer les fromages déjà collectés (au cas où)
+    this.simulation.mice.forEach(mouse => {
+      if (mouse.cheeseFound > 0) {
+        // Si une souris a déjà trouvé des fromages, on les marque comme collectés
+        for (let i = 0; i < mouse.cheeseFound; i++) {
+          this.collectedCheeses.add(`cheese-${i}`);
+        }
+      }
+    });
   }
 
   // Démarrer la simulation
@@ -20,7 +36,8 @@ export class PythonSimulation {
     this.isRunning = true;
     this.simulation.status = 'running';
     
-    this.log('Simulation démarrée (API Python)');
+    const totalCheeses = this.getTotalCheesesCount();
+    this.log(`Simulation démarrée (API Python) - Objectif: collecter ${totalCheeses} fromage(s)`);
     this.updateSimulation();
     
     // Démarrer la boucle de simulation
@@ -92,63 +109,97 @@ export class PythonSimulation {
     this.checkEndConditions();
 
     this.updateSimulation();
-    console.log(`[DEBUG] Tour ${this.simulation.currentTurn} terminé`);
   }
 
   // Traiter le tour d'une souris
   private async processMouseTurn(mouse: Mouse) {
     try {
-      console.log(`[DEBUG] Traitement de ${mouse.name} à la position (${mouse.position.x}, ${mouse.position.y})`);
-      
-      // Vérifier si la souris est déjà sur un fromage
+      // Vérifier si la souris est déjà sur un fromage non collecté
       const alreadyOnCheese = this.checkCheeseFound(mouse.position);
       if (alreadyOnCheese) {
-        this.log(`${mouse.name} est déjà sur un fromage à (${mouse.position.x}, ${mouse.position.y}) - pas de mouvement`);
-        return; // Ne pas traiter cette souris
+        const cheeseKey = `${mouse.position.x}-${mouse.position.y}`;
+        if (!this.collectedCheeses.has(cheeseKey)) {
+          // La souris est sur un fromage non collecté, le collecter
+          mouse.cheeseFound++;
+          this.log(`🎉 ${mouse.name} a trouvé du fromage à (${mouse.position.x}, ${mouse.position.y}) ! Total: ${mouse.cheeseFound}`);
+          
+          // Marquer ce fromage comme collecté
+          this.collectedCheeses.add(cheeseKey);
+          
+          // Vérifier si tous les fromages ont été collectés
+          if (this.checkAllCheesesCollected()) {
+            this.log(`🏆 ${mouse.name} a collecté tous les fromages ! Simulation terminée !`);
+            this.simulation.status = 'completed';
+            this.simulation.endTime = new Date().toISOString();
+            this.isRunning = false;
+            if (this.intervalId) {
+              clearInterval(this.intervalId);
+              this.intervalId = null;
+            }
+            return;
+          } else {
+            const remaining = this.getRemainingCheesesCount();
+            const total = this.getTotalCheesesCount();
+            const collected = this.collectedCheeses.size;
+            this.log(`🍽️ Progrès: ${collected}/${total} fromages collectés (${remaining} restants)`);
+          }
+        }
+        // Si le fromage est déjà collecté, la souris peut continuer à bouger
       }
       
-      console.log(`[DEBUG] Appel de l'IA pour ${mouse.name}...`);
       // Obtenir le mouvement de l'API Python
       const move = await this.getMouseMoveFromPython(mouse);
-      console.log(`[DEBUG] IA a retourné le mouvement: ${move} pour ${mouse.name}`);
       
       // Calculer la nouvelle position
       const newPosition = this.calculateNewPosition(mouse.position, move);
-      console.log(`[DEBUG] Nouvelle position calculée: (${newPosition.x}, ${newPosition.y}) pour ${mouse.name}`);
       
       // Vérifier si le mouvement est valide
       if (this.isValidMove(newPosition)) {
-        console.log(`[DEBUG] Mouvement valide pour ${mouse.name}`);
         // Mettre à jour la position
         mouse.position = newPosition;
         mouse.moves++;
         
         // Vérifier si la souris a trouvé du fromage
-        if (this.checkCheeseFound(newPosition)) {
+        const cheeseFound = this.checkCheeseFound(newPosition);
+        if (cheeseFound) {
           mouse.cheeseFound++;
-          this.log(`🎉 ${mouse.name} a trouvé du fromage à (${newPosition.x}, ${newPosition.y}) !`);
+          this.log(`🎉 ${mouse.name} a trouvé du fromage à (${newPosition.x}, ${newPosition.y}) ! Total: ${mouse.cheeseFound}`);
           
-          // Marquer la simulation comme terminée
-          this.simulation.status = 'completed';
-          this.simulation.endTime = new Date().toISOString();
-          this.isRunning = false;
-          if (this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
+          // Marquer ce fromage comme collecté
+          const cheeseKey = `${newPosition.x}-${newPosition.y}`;
+          this.collectedCheeses.add(cheeseKey);
+          
+          // Vérifier si tous les fromages atteignables ont été collectés
+          if (this.checkAllCheesesCollected()) {
+            this.log(`🏆 ${mouse.name} a collecté tous les fromages ! Simulation terminée !`);
+            this.simulation.status = 'completed';
+            this.simulation.endTime = new Date().toISOString();
+            this.isRunning = false;
+            if (this.intervalId) {
+              clearInterval(this.intervalId);
+              this.intervalId = null;
+            }
+          } else {
+            const remaining = this.getRemainingCheesesCount();
+            const total = this.getTotalCheesesCount();
+            const collected = this.collectedCheeses.size;
+            this.log(`🍽️ Progrès: ${collected}/${total} fromages collectés (${remaining} restants)`);
           }
         }
         
         // Appliquer les effets du tour
-        applyTurnEffects(mouse, this.simulation.rules);
+        const environment = {
+          hasOtherMiceNearby: this.checkOtherMiceNearby(mouse),
+          foundCheese: false // Le fromage a déjà été traité plus haut
+        };
+        applyTurnEffects(mouse, this.simulation.rules, environment);
         
         this.log(`${mouse.name} se déplace vers ${move} vers (${newPosition.x}, ${newPosition.y})`);
       } else {
-        console.log(`[DEBUG] Mouvement invalide pour ${mouse.name}`);
         this.log(`${mouse.name} ne peut pas se déplacer vers ${move} - mouvement bloqué`);
       }
       
     } catch (error) {
-      console.error(`[DEBUG] Erreur lors du traitement de ${mouse.name}:`, error);
       this.log(`Erreur lors du traitement de ${mouse.name}: ${error}`);
     }
   }
@@ -156,18 +207,17 @@ export class PythonSimulation {
   // Obtenir le mouvement de l'API Python
   private async getMouseMoveFromPython(mouse: Mouse): Promise<Direction> {
     try {
-      console.log(`[DEBUG] Préparation de la requête pour ${mouse.name}...`);
-      const labyrinthFormat = PythonApiClient.convertLabyrinthToPythonFormat(this.simulation.labyrinth);
+      // Obtenir les fromages non collectés
+      const uncollectedCheeses = this.getUncollectedCheeses();
+      const labyrinthFormat = PythonApiClient.convertLabyrinthToPythonFormat(this.simulation.labyrinth, uncollectedCheeses);
       const availableMoves = PythonApiClient.getAvailableMoves(this.simulation.labyrinth, mouse.position);
-      
-      console.log(`[DEBUG] Mouvements disponibles pour ${mouse.name}:`, availableMoves);
-      console.log(`[DEBUG] Format du labyrinthe:`, labyrinthFormat);
       
       const request: MouseMoveRequest = {
         mouseId: mouse.id,
         position: mouse.position,
         environment: {
           ...labyrinthFormat,
+          cheesePositions: uncollectedCheeses, // Seulement les fromages non collectés
           otherMice: this.simulation.mice
             .filter(m => m.id !== mouse.id && m.isAlive)
             .map(m => ({ id: m.id, position: m.position })),
@@ -183,24 +233,18 @@ export class PythonSimulation {
         availableMoves
       };
 
-      console.log(`[DEBUG] Envoi de la requête à l'API Python pour ${mouse.name}...`);
       const response = await PythonApiClient.getMouseMove(request);
-      console.log(`[DEBUG] Réponse de l'API Python pour ${mouse.name}:`, response);
       this.log(`IA Python: ${response.reasoning}`);
       
       return response.move as Direction;
     } catch (error) {
-      console.error(`[DEBUG] Erreur API Python pour ${mouse.name}:`, error);
       // Fallback vers un mouvement aléatoire si l'API Python n'est pas disponible
       this.log(`API Python non disponible, mouvement aléatoire pour ${mouse.name}`);
       const availableMoves = PythonApiClient.getAvailableMoves(this.simulation.labyrinth, mouse.position);
-      console.log(`[DEBUG] Mouvements disponibles pour fallback:`, availableMoves);
       if (availableMoves.length === 0) {
-        console.log(`[DEBUG] Aucun mouvement disponible, utilisation de 'north' par défaut`);
         return 'north'; // Mouvement par défaut
       }
       const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)] as Direction;
-      console.log(`[DEBUG] Mouvement aléatoire choisi: ${randomMove}`);
       return randomMove;
     }
   }
@@ -238,13 +282,72 @@ export class PythonSimulation {
     }
     
     // Vérifier si ce n'est pas un mur
-    return this.simulation.labyrinth.grid[y][x] !== 'wall';
+    // Les fromages collectés deviennent des chemins normaux
+    const cellType = this.simulation.labyrinth.grid[y][x];
+    if (cellType === 'wall') {
+      return false;
+    }
+    
+    // Tous les autres types (path, cheese, start) sont valides
+    return true;
   }
 
-  // Vérifier si la souris a trouvé du fromage
+  // Vérifier si la souris a trouvé du fromage (non collecté)
   private checkCheeseFound(position: Position): boolean {
     const { x, y } = position;
-    return this.simulation.labyrinth.grid[y][x] === 'cheese';
+    const cellType = this.simulation.labyrinth.grid[y][x];
+    
+    // Vérifier si c'est un fromage dans la grille
+    if (cellType !== 'cheese') {
+      return false;
+    }
+    
+    // Vérifier si ce fromage n'a pas encore été collecté
+    const cheeseKey = `${x}-${y}`;
+    return !this.collectedCheeses.has(cheeseKey);
+  }
+
+  // Vérifier si tous les fromages atteignables ont été collectés
+  private checkAllCheesesCollected(): boolean {
+    const totalCheeses = this.getTotalCheesesCount();
+    const collectedCount = this.collectedCheeses.size;
+    return collectedCount >= totalCheeses;
+  }
+
+  // Obtenir le nombre total de fromages dans le labyrinthe
+  private getTotalCheesesCount(): number {
+    let count = 0;
+    for (let y = 0; y < this.simulation.labyrinth.height; y++) {
+      for (let x = 0; x < this.simulation.labyrinth.width; x++) {
+        if (this.simulation.labyrinth.grid[y][x] === 'cheese') {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  // Obtenir le nombre de fromages restants
+  private getRemainingCheesesCount(): number {
+    const total = this.getTotalCheesesCount();
+    const collected = this.collectedCheeses.size;
+    return Math.max(0, total - collected);
+  }
+
+  // Obtenir la liste des fromages non collectés
+  private getUncollectedCheeses(): Position[] {
+    const uncollected: Position[] = [];
+    for (let y = 0; y < this.simulation.labyrinth.height; y++) {
+      for (let x = 0; x < this.simulation.labyrinth.width; x++) {
+        if (this.simulation.labyrinth.grid[y][x] === 'cheese') {
+          const cheeseKey = `${x}-${y}`;
+          if (!this.collectedCheeses.has(cheeseKey)) {
+            uncollected.push({ x, y });
+          }
+        }
+      }
+    }
+    return uncollected;
   }
 
   // Vérifier les conditions de fin
@@ -264,32 +367,11 @@ export class PythonSimulation {
       return;
     }
     
-    // Si une souris a trouvé du fromage
-    const winningMouse = aliveMice.find(mouse => mouse.cheeseFound > 0);
-    if (winningMouse) {
-      this.simulation.status = 'completed';
-      this.simulation.endTime = new Date().toISOString();
-      this.isRunning = false;
-      if (this.intervalId) {
-        clearInterval(this.intervalId);
-        this.intervalId = null;
-      }
-      this.log(`Simulation terminée - ${winningMouse.name} a gagné !`);
-      return;
-    }
+    // La logique de victoire est maintenant gérée dans processMouseTurn()
+    // quand tous les fromages sont collectés
     
-    // Vérifier les conditions de victoire personnalisées
-    const winConditions = checkWinConditions(this.simulation);
-    if (winConditions.length > 0) {
-      this.simulation.status = 'completed';
-      this.simulation.endTime = new Date().toISOString();
-      this.isRunning = false;
-      if (this.intervalId) {
-        clearInterval(this.intervalId);
-        this.intervalId = null;
-      }
-      this.log(`Simulation terminée - conditions de victoire atteintes: ${winConditions.join(', ')}`);
-    }
+    // La logique de victoire est entièrement gérée dans processMouseTurn()
+    // quand tous les fromages sont collectés via checkAllCheesesCollected()
   }
 
   // Mettre à jour la simulation
@@ -309,6 +391,22 @@ export class PythonSimulation {
   // Obtenir l'état actuel de la simulation
   getSimulation(): Simulation {
     return { ...this.simulation };
+  }
+
+  // Vérifier si d'autres souris sont à proximité
+  private checkOtherMiceNearby(mouse: Mouse): boolean {
+    const proximityDistance = 2; // Distance de proximité
+    
+    return this.simulation.mice.some(otherMouse => {
+      if (otherMouse.id === mouse.id || !otherMouse.isAlive) {
+        return false;
+      }
+      
+      const distance = Math.abs(mouse.position.x - otherMouse.position.x) + 
+                      Math.abs(mouse.position.y - otherMouse.position.y);
+      
+      return distance <= proximityDistance;
+    });
   }
 
   // Vérifier si la simulation est en cours
