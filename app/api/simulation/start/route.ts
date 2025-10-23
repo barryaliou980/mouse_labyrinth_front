@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       const mouseId = uuidv4();
       
       // Validation des données de la souris
-      if (!mouseData.name || !mouseData.intelligenceType || !mouseData.startPosition) {
+      if (!mouseData.name || !mouseData.movementDelay || !mouseData.startPosition) {
         return NextResponse.json(
           {
             success: false,
@@ -92,14 +92,23 @@ export async function POST(request: NextRequest) {
         id: mouseId,
         name: mouseData.name,
         position: mouseData.startPosition,
-        intelligenceType: mouseData.intelligenceType as IntelligenceType,
+        movementDelay: mouseData.movementDelay,
         health: rules.maxEnergy,
         happiness: rules.maxHappiness,
         energy: rules.maxEnergy,
         cheeseFound: 0,
         moves: 0,
-        isAlive: true
+        isAlive: true,
+        tag: mouseData.tag || (i + 1) // Utiliser le tag fourni ou l'index + 1
       };
+      
+      // Forcer la définition du tag si il n'est pas défini
+      if (!mouse.tag) {
+        mouse.tag = i + 1;
+      }
+      
+      console.log(`🐭 Souris créée: ${mouse.name}, Tag: ${mouse.tag}, Données reçues:`, mouseData);
+      console.log(`🐭 Tag reçu: ${mouseData.tag}, Tag assigné: ${mouse.tag}`);
       
       // Pour les règles prédéfinies, ne pas stocker en base
       if (!isPredefinedRule) {

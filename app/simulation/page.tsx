@@ -96,7 +96,7 @@ export default function SimulationPage() {
         id: `sim-${Date.now()}`,
         labyrinthId: config.labyrinthId,
         labyrinth,
-        mice: config.mice.map((mouseConfig: { name: string; intelligenceType: any; startPosition?: any }, index: number) => {
+        mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number }, index: number) => {
           // Utiliser les positions de départ du labyrinthe si disponible
           const startPos = labyrinth.startPositions && labyrinth.startPositions.length > 0 
             ? labyrinth.startPositions[index % labyrinth.startPositions.length]
@@ -106,13 +106,14 @@ export default function SimulationPage() {
             id: `mouse-${index}`,
             name: mouseConfig.name,
             position: startPos,
-            intelligenceType: mouseConfig.intelligenceType,
+            movementDelay: mouseConfig.movementDelay,
             health: rules.maxEnergy,
             happiness: rules.maxHappiness,
             energy: rules.maxEnergy,
             cheeseFound: 0,
             moves: 0,
-            isAlive: true
+            isAlive: true,
+            tag: mouseConfig.tag || (index + 1)
           };
         }),
         rules,
@@ -125,6 +126,10 @@ export default function SimulationPage() {
       setCurrentSimulation(simulation);
       setIsRunning(true);
       addLog(`Simulation démarrée avec ${config.mice.length} souris (API Python)`);
+      
+      // Log pour vérifier les souris créées
+      console.log('🐭 Souris créées dans la simulation:', simulation.mice);
+      console.log('🐭 Tags des souris:', simulation.mice.map(m => ({ name: m.name, tag: m.tag })));
       
       // Démarrer la simulation avec l'API Python
       const pythonSim = new PythonSimulation(simulation);

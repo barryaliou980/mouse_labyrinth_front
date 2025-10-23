@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Square, Settings, Mouse, Brain, Target } from 'lucide-react';
-import { Labyrinth, Mouse as MouseType, Simulation, SimulationRules, IntelligenceType } from '@/lib/types';
+import { Labyrinth, Mouse as MouseType, Simulation, SimulationRules } from '@/lib/types';
 import { getAllRules } from '@/lib/rules';
 import './SimulationPanel.css';
 
@@ -19,8 +19,9 @@ interface SimulationConfig {
   labyrinthId: string;
   mice: Array<{
     name: string;
-    intelligenceType: IntelligenceType;
+    movementDelay: number;
     startPosition: { x: number; y: number };
+    tag: number;
   }>;
   rulesId: string;
 }
@@ -37,11 +38,24 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
   const [selectedRules, setSelectedRules] = useState<string>('classic');
   const [mice, setMice] = useState<Array<{
     name: string;
-    intelligenceType: IntelligenceType;
+    movementDelay: number;
     startPosition: { x: number; y: number };
+    tag: number;
   }>>([
-    { name: 'Souris 1', intelligenceType: 'random', startPosition: { x: 1, y: 1 } }
+    { name: 'Souris 1', movementDelay: 500, startPosition: { x: 1, y: 1 }, tag: 1 }
   ]);
+  
+  // Forcer la définition du tag pour toutes les souris
+  useEffect(() => {
+    setMice(prevMice => prevMice.map((mouse, index) => ({
+      ...mouse,
+      tag: mouse.tag || (index + 1)
+    })));
+  }, []);
+  
+  // Log pour vérifier l'état initial
+  console.log('🐭 État initial des souris:', mice);
+  console.log('🐭 Tag de la première souris:', mice[0]?.tag);
   
   const [availableRules, setAvailableRules] = useState<SimulationRules[]>([]);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
@@ -65,11 +79,32 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
 
   const addMouse = () => {
     if (mice.length < 3) {
+      // Trouver une position de départ disponible
+      const labyrinth = labyrinths.find(l => l.id === selectedLabyrinth);
+      let startPosition = { x: 1, y: 1 }; // Position par défaut
+      
+      if (labyrinth && labyrinth.startPositions.length > 0) {
+        // Utiliser la prochaine position de départ disponible
+        const usedPositions = mice.map(mouse => mouse.startPosition);
+        const availablePosition = labyrinth.startPositions.find(pos => 
+          !usedPositions.some(used => used.x === pos.x && used.y === pos.y)
+        );
+        
+        if (availablePosition) {
+          startPosition = availablePosition;
+        } else {
+          // Si toutes les positions sont utilisées, utiliser la première
+          startPosition = labyrinth.startPositions[0];
+        }
+      }
+      
       const newMouse = {
         name: `Souris ${mice.length + 1}`,
-        intelligenceType: 'random' as IntelligenceType,
-        startPosition: { x: 1, y: 1 }
+        movementDelay: 500, // Délai par défaut de 500ms
+        startPosition: startPosition,
+        tag: mice.length + 1
       };
+      console.log('🐭 Nouvelle souris créée:', newMouse);
       setMice([...mice, newMouse]);
     }
   };
@@ -98,15 +133,12 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
       rulesId: selectedRules
     };
 
+    console.log('🐭 Configuration des souris:', mice);
+    console.log('🐭 Tags des souris:', mice.map(m => ({ name: m.name, tag: m.tag })));
     onStartSimulation(config);
   };
 
-  const intelligenceTypes: { value: IntelligenceType; label: string; description: string }[] = [
-    { value: 'random', label: 'Aléatoire', description: 'Mouvements aléatoires' },
-    { value: 'directional', label: 'Directionnelle', description: 'Se dirige vers le fromage' },
-    { value: 'smart', label: 'Intelligente', description: 'Algorithme de recherche de chemin' },
-    { value: 'social', label: 'Sociale', description: 'Évite l\'isolement' }
-  ];
+  // Plus besoin des types d'IA - remplacés par le délai de mouvement
 
   return (
     <div className="simulation-panel bg-white rounded-lg shadow-lg p-6">
@@ -198,7 +230,7 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">
                       Nom
@@ -214,25 +246,38 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
                   
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">
-                      Type d'IA
+                      Tag
                     </label>
-                    <select
-                      value={mouse.intelligenceType}
-                      onChange={(e) => updateMouse(index, 'intelligenceType', e.target.value)}
+                    <input
+                      type="number"
+                      min="1"
+                      max="9"
+                      value={mouse.tag}
+                      onChange={(e) => updateMouse(index, 'tag', parseInt(e.target.value) || 1)}
                       className="w-full p-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                       disabled={isRunning}
-                    >
-                      {intelligenceTypes.map((type) => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">
+                      Délai de mouvement (ms)
+                    </label>
+                    <input
+                      type="number"
+                      min="100"
+                      max="5000"
+                      step="100"
+                      value={mouse.movementDelay}
+                      onChange={(e) => updateMouse(index, 'movementDelay', parseInt(e.target.value) || 500)}
+                      className="w-full p-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
+                      disabled={isRunning}
+                    />
                   </div>
                 </div>
                 
                 <div className="mt-2 text-xs text-gray-500">
-                  {intelligenceTypes.find(t => t.value === mouse.intelligenceType)?.description}
+                  Délai entre les mouvements: {mouse.movementDelay}ms
                 </div>
               </div>
             ))}

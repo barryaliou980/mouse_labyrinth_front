@@ -9,7 +9,7 @@ export interface Mouse {
   id: string;
   name: string;
   position: Position;
-  intelligenceType: IntelligenceType;
+  movementDelay: number; // Délai entre les mouvements en millisecondes
   health: number;
   happiness: number;
   energy: number;
@@ -17,6 +17,7 @@ export interface Mouse {
   moves: number;
   isAlive: boolean;
   lastMove?: Direction;
+  tag: number; // Tag pour différencier les souris visuellement (1, 2, 3, etc.)
 }
 
 export interface Labyrinth {
@@ -218,7 +219,8 @@ export interface SimulationConfig {
   rulesId: string;
   mice: Array<{
     name: string;
-    intelligenceType: IntelligenceType;
+    movementDelay: number; // Délai entre les mouvements en millisecondes
     startPosition?: Position;
+    tag: number; // Tag pour différencier les souris visuellement
   }>;
 }

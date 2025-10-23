@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Labyrinth, Mouse, CellType } from '@/lib/types';
-import MouseComponent from './Mouse';
 import './MazeGrid.css';
 
 interface MazeGridProps {
@@ -18,6 +17,9 @@ const MazeGrid: React.FC<MazeGridProps> = ({
   onCellClick,
   className = ''
 }) => {
+  // Log pour vérifier les souris reçues
+  console.log('🐭 Souris reçues dans MazeGrid:', mice);
+  console.log('🐭 Tags des souris:', mice.map(m => ({ name: m.name, tag: m.tag })));
   const getCellClass = (cellType: CellType): string => {
     switch (cellType) {
       case 'wall':
@@ -45,7 +47,11 @@ const MazeGrid: React.FC<MazeGridProps> = ({
   };
 
   const getMouseAtPosition = (x: number, y: number): Mouse | undefined => {
-    return mice.find(mouse => mouse.position.x === x && mouse.position.y === y);
+    const mouse = mice.find(mouse => mouse.position.x === x && mouse.position.y === y);
+    if (mouse) {
+      console.log(`🐭 Souris trouvée à (${x}, ${y}):`, mouse.name, 'Tag:', mouse.tag);
+    }
+    return mouse;
   };
 
   const isCheesePosition = (x: number, y: number): boolean => {
@@ -84,7 +90,23 @@ const MazeGrid: React.FC<MazeGridProps> = ({
               >
                 {/* Contenu de la cellule */}
                 {mouse ? (
-                  <div className="mouse">🐭</div>
+                  <div className="mouse relative">
+                    <span className="text-lg">🐭</span>
+                    <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border border-white">
+                      {(() => {
+                        // Forcer la définition du tag avec plusieurs fallbacks
+                        let tag = mouse.tag;
+                        if (!tag || tag === undefined || tag === null) {
+                          tag = mice.indexOf(mouse) + 1;
+                        }
+                        if (!tag || tag === undefined || tag === null) {
+                          tag = 1; // Fallback final
+                        }
+                        console.log(`🐭 Affichage tag pour ${mouse.name}:`, tag, 'mouse.tag original:', mouse.tag);
+                        return tag;
+                      })()}
+                    </span>
+                  </div>
                 ) : (
                   <span className="text-lg">
                     {getCellIcon(cellType)}
@@ -109,8 +131,11 @@ const MazeGrid: React.FC<MazeGridProps> = ({
     </div>
        <div className="mt-4 flex flex-wrap gap-4 text-sm">
        <div className="flex items-center gap-2">
-         <span className="text-lg">🐭</span>
-         <span>Souris</span>
+         <div className="relative">
+           <span className="text-lg">🐭</span>
+           <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">1</span>
+         </div>
+         <span>Souris (Tag)</span>
        </div>
        <div className="flex items-center gap-2">
          <span className="text-lg">🧀</span>

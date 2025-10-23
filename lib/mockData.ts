@@ -6,22 +6,22 @@ export const mockLabyrinths: Labyrinth[] = [
     id: 'labyrinth-1',
     name: 'Labyrinthe Simple',
     description: 'Un labyrinthe simple pour débuter',
-    width: 10,
-    height: 10,
+    width: 6,
+    height: 6,
     grid: [
-      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
-      ['wall', 'start', 'path', 'path', 'wall', 'wall', 'path', 'path', 'path', 'wall'],
-      ['wall', 'path', 'wall', 'path', 'wall', 'wall', 'path', 'wall', 'path', 'wall'],
-      ['wall', 'path', 'wall', 'path', 'path', 'path', 'path', 'wall', 'path', 'wall'],
-      ['wall', 'path', 'wall', 'wall', 'wall', 'wall', 'path', 'wall', 'path', 'wall'],
-      ['wall', 'path', 'path', 'path', 'path', 'path', 'path', 'wall', 'path', 'wall'],
-      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'path', 'wall', 'path', 'wall'],
-      ['wall', 'path', 'path', 'path', 'path', 'path', 'path', 'wall', 'path', 'wall'],
-      ['wall', 'cheese', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'path', 'wall'],
-      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
+      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall'],
+      ['wall', 'start', 'path', 'cheese', 'path', 'wall'],
+      ['wall', 'path', 'wall', 'path', 'wall', 'wall'],
+      ['wall', 'path', 'path', 'path', 'cheese', 'wall'],
+      ['wall', 'cheese', 'wall', 'path', 'path', 'wall'],
+      ['wall', 'wall', 'wall', 'wall', 'wall', 'wall']
     ],
     startPositions: [{ x: 1, y: 1 }],
-    cheesePositions: [ { x: 1, y: 8 }],
+    cheesePositions: [
+      { x: 3, y: 1 },
+      { x: 4, y: 3 },
+      { x: 1, y: 4 }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },

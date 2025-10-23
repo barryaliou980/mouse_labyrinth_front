@@ -163,7 +163,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                           {getRankIcon(index)}
                         </span>
                         <div>
-                          <h4 className="font-semibold text-gray-800">
+                          <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                            <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                              {mouse.tag}
+                            </span>
                             {mouse.name}
                             {isWinner && <span className="ml-2 text-green-600">👑</span>}
                           </h4>
