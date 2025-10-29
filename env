@@ -4,11 +4,10 @@
 # Pour le développement local
 NEXT_PUBLIC_PYTHON_API_URL=http://localhost:8000
 
-# Pour la production (remplacer par votre URL de déploiement)
-# NEXT_PUBLIC_PYTHON_API_URL=https://mouse-ai-api.onrender.com
-
-# Alternative: Variable d'environnement côté serveur (pour les routes API)
-# PYTHON_API_URL=http://localhost:8000
+# Configuration Supabase (obligatoire pour les labyrinthes)
+# Remplacez par vos vraies valeurs depuis https://supabase.com
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # Configuration de l'environnement Next.js
 NODE_ENV=development

@@ -1,144 +1,144 @@
-# Configuration Supabase pour Mouse Labyrinth
+# Configuration Supabase - Guide Rapide
 
-Ce guide explique comment configurer Supabase pour stocker et récupérer les labyrinthes et les règles de simulation.
+## 🚀 Étapes pour configurer Supabase
 
-## 1. Créer un projet Supabase
+### 1. Créer un projet Supabase
 
-1. Allez sur [supabase.com](https://supabase.com)
+1. Allez sur [https://supabase.com](https://supabase.com)
 2. Créez un compte ou connectez-vous
 3. Cliquez sur "New Project"
-4. Choisissez votre organisation et donnez un nom à votre projet
-5. Créez un mot de passe sécurisé pour la base de données
-6. Choisissez une région proche de vous
-7. Cliquez sur "Create new project"
+4. Choisissez votre organisation
+5. Donnez un nom à votre projet (ex: "mouse-labyrinth")
+6. Créez un mot de passe fort pour la base de données
+7. Choisissez une région proche de vous
+8. Cliquez sur "Create new project"
 
-## 2. Configurer les variables d'environnement
+### 2. Récupérer les clés
 
-1. Dans votre projet Supabase, allez dans Settings > API
-2. Copiez l'URL du projet et la clé publique (anon key)
-3. Créez un fichier `.env.local` à la racine de votre projet Next.js :
+1. Dans le dashboard de votre projet Supabase
+2. Allez dans **Settings** → **API**
+3. Copiez les valeurs suivantes :
+   - **Project URL** (ex: `https://abcdefgh.supabase.co`)
+   - **anon public** key (ex: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`)
 
-```env
+### 3. Configurer l'environnement
+
+Modifiez le fichier `.env.local` :
+
+```bash
+# Configuration Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://votre-projet.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=votre-clé-publique
+NEXT_PUBLIC_SUPABASE_ANON_KEY=votre-anon-key-ici
 ```
 
-## 3. Créer les tables dans Supabase
+### 4. Créer les tables
 
-1. Dans votre projet Supabase, allez dans l'onglet "SQL Editor"
-2. Cliquez sur "New query"
-3. Copiez et collez le contenu du fichier `supabase-schema.sql`
-4. Cliquez sur "Run" pour exécuter le script
+Exécutez le script SQL dans l'éditeur SQL de Supabase :
 
-Le script va créer :
-- Table `labyrinths` : pour stocker les labyrinthes
-- Table `simulation_rules` : pour stocker les règles de simulation
-- Table `simulations` : pour stocker les simulations
-- Table `mice` : pour stocker les souris
-- Index pour améliorer les performances
-- Triggers pour mettre à jour automatiquement les timestamps
-- Politiques RLS (Row Level Security) pour l'accès public
+```sql
+-- Copiez le contenu de supabase-schema.sql dans l'éditeur SQL
+-- Ou exécutez les commandes suivantes :
 
-## 4. Vérifier la configuration
+-- Table labyrinths
+CREATE TABLE IF NOT EXISTS labyrinths (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  grid_data JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-1. Redémarrez votre serveur de développement Next.js
-2. Allez sur `/management` dans votre application
-3. Vous devriez voir les labyrinthes et règles chargés depuis Supabase
+-- Table simulation_rules
+CREATE TABLE IF NOT EXISTS simulation_rules (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  rules_data JSONB NOT NULL,
+  is_predefined BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-## 5. Fonctionnalités disponibles
+-- Table simulations
+CREATE TABLE IF NOT EXISTS simulations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  labyrinth_id UUID REFERENCES labyrinths(id),
+  rules_id UUID REFERENCES simulation_rules(id),
+  status TEXT DEFAULT 'pending',
+  start_time TIMESTAMP WITH TIME ZONE,
+  end_time TIMESTAMP WITH TIME ZONE,
+  results JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-### Labyrinthes
-- **Créer** : Nouveau labyrinthe avec éditeur visuel
-- **Lire** : Voir tous les labyrinthes disponibles
-- **Modifier** : Éditer un labyrinthe existant
-- **Supprimer** : Supprimer un labyrinthe
+-- Table mice
+CREATE TABLE IF NOT EXISTS mice (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  simulation_id UUID REFERENCES simulations(id),
+  name TEXT NOT NULL,
+  position JSONB NOT NULL,
+  health INTEGER DEFAULT 100,
+  happiness INTEGER DEFAULT 50,
+  energy INTEGER DEFAULT 100,
+  cheese_found INTEGER DEFAULT 0,
+  moves INTEGER DEFAULT 0,
+  is_alive BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-### Règles de simulation
-- **Créer** : Nouvelles règles personnalisées
-- **Lire** : Voir toutes les règles disponibles
-- **Modifier** : Éditer des règles existantes
-- **Supprimer** : Supprimer des règles
+-- Activer RLS (Row Level Security)
+ALTER TABLE labyrinths ENABLE ROW LEVEL SECURITY;
+ALTER TABLE simulation_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE simulations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mice ENABLE ROW LEVEL SECURITY;
 
-### API Endpoints
+-- Politiques pour permettre l'accès public (lecture seule)
+CREATE POLICY "Allow public read access on labyrinths" ON labyrinths FOR SELECT USING (true);
+CREATE POLICY "Allow public read access on simulation_rules" ON simulation_rules FOR SELECT USING (true);
+CREATE POLICY "Allow public read access on simulations" ON simulations FOR SELECT USING (true);
+CREATE POLICY "Allow public read access on mice" ON mice FOR SELECT USING (true);
 
-#### Labyrinthes
-- `GET /api/labyrinths` - Récupérer tous les labyrinthes
-- `GET /api/labyrinths/[id]` - Récupérer un labyrinthe spécifique
-- `POST /api/labyrinths` - Créer un nouveau labyrinthe
-- `PUT /api/labyrinths/[id]` - Mettre à jour un labyrinthe
-- `DELETE /api/labyrinths/[id]` - Supprimer un labyrinthe
-
-#### Règles
-- `GET /api/rules` - Récupérer toutes les règles
-- `GET /api/rules/[id]` - Récupérer une règle spécifique
-- `POST /api/rules` - Créer une nouvelle règle
-- `PUT /api/rules/[id]` - Mettre à jour une règle
-- `DELETE /api/rules/[id]` - Supprimer une règle
-
-## 6. Mode de fonctionnement
-
-L'application fonctionne en mode hybride :
-
-- **Avec Supabase configuré** : Les données sont stockées et récupérées depuis Supabase
-- **Sans Supabase** : L'application utilise les données mockées locales
-
-Pour désactiver Supabase temporairement, commentez ou supprimez les variables d'environnement dans `.env.local`.
-
-## 7. Structure des données
-
-### Labyrinthe
-```typescript
-{
-  id: string;
-  name: string;
-  description: string;
-  width: number;
-  height: number;
-  grid: CellType[][];
-  startPositions: Position[];
-  cheesePositions: Position[];
-  createdAt: string;
-  updatedAt: string;
-}
+-- Politiques pour permettre l'insertion publique
+CREATE POLICY "Allow public insert on labyrinths" ON labyrinths FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public insert on simulation_rules" ON simulation_rules FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public insert on simulations" ON simulations FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public insert on mice" ON mice FOR INSERT WITH CHECK (true);
 ```
 
-### Règles de simulation
-```typescript
-{
-  id: string;
-  name: string;
-  description: string;
-  turnDuration: number;
-  energyConsumption: number;
-  happinessDecay: number;
-  isolationPenalty: number;
-  cheeseBonus: number;
-  proximityBonus: number;
-  maxEnergy: number;
-  maxHappiness: number;
-  winConditions: WinCondition[];
-}
+### 5. Redémarrer l'application
+
+```bash
+# Arrêter le serveur de développement
+# Puis redémarrer
+npm run dev
 ```
 
-## 8. Sécurité
+### 6. Vérifier la configuration
 
-Les politiques RLS (Row Level Security) sont configurées pour permettre :
-- Lecture publique de toutes les données
-- Écriture publique (création, modification, suppression)
+1. Allez sur `http://localhost:3000/simulation`
+2. Les labyrinthes devraient maintenant venir de Supabase
+3. Vous pouvez créer de nouveaux labyrinthes via l'interface
 
-Pour un environnement de production, vous devriez :
-1. Implémenter l'authentification utilisateur
-2. Configurer des politiques RLS plus restrictives
-3. Utiliser des rôles et permissions appropriés
+## 🔧 Dépannage
 
-## 9. Dépannage
+### Problème : "Supabase non configuré"
+- Vérifiez que `.env.local` existe et contient les bonnes valeurs
+- Redémarrez le serveur de développement
+- Vérifiez que les variables commencent par `NEXT_PUBLIC_`
 
-### Problèmes courants
+### Problème : "Failed to fetch labyrinths"
+- Vérifiez que les tables existent dans Supabase
+- Vérifiez que les politiques RLS sont correctes
+- Vérifiez les logs dans la console du navigateur
 
-1. **Erreur de connexion** : Vérifiez que les variables d'environnement sont correctement définies
-2. **Tables non trouvées** : Assurez-vous d'avoir exécuté le script SQL
-3. **Permissions refusées** : Vérifiez que les politiques RLS sont activées
+### Problème : "CORS error"
+- Supabase gère automatiquement CORS
+- Vérifiez que l'URL du projet est correcte
 
-### Logs
+## 📝 Notes importantes
 
-Les erreurs sont loggées dans la console du navigateur et du serveur. Activez les logs détaillés en mode développement.
+- Les variables `NEXT_PUBLIC_*` sont exposées côté client
+- Ne jamais commiter `.env.local` dans Git
+- Utilisez des politiques RLS appropriées en production
+- Le fallback mock fonctionne si Supabase n'est pas configuré
