@@ -1,6 +1,7 @@
 import { Simulation, Mouse, Labyrinth, Direction, Position } from './types';
 import { PythonApiClient, MouseMoveRequest } from './pythonApiClient';
 import { applyTurnEffects, checkWinConditions } from './rules';
+import { getApiUrl } from './config';
 
 export class PythonSimulation {
   private simulation: Simulation;
@@ -189,7 +190,7 @@ export class PythonSimulation {
   // Nettoyer les instances d'IA Python
   private async cleanupPythonAI() {
     try {
-      const response = await fetch(`http://localhost:8000/api/cleanup`, {
+      const response = await fetch(getApiUrl('/api/cleanup'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

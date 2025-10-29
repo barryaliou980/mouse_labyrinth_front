@@ -1,6 +1,5 @@
 import { Mouse, Labyrinth, CellType } from './types';
-
-const PYTHON_API_BASE_URL = 'http://localhost:8000';
+import { getApiUrl } from './config';
 
 export interface MouseMoveRequest {
   mouseId: string;
@@ -33,7 +32,7 @@ export interface MouseMoveResponse {
 export class PythonApiClient {
   static async getMouseMove(request: MouseMoveRequest): Promise<MouseMoveResponse> {
     try {
-      const response = await fetch(`${PYTHON_API_BASE_URL}/api/move`, {
+      const response = await fetch(getApiUrl('/api/move'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +60,7 @@ export class PythonApiClient {
 
   static async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${PYTHON_API_BASE_URL}/api/health`);
+      const response = await fetch(getApiUrl('/api/health'));
       return response.ok;
     } catch (error) {
       console.error('Python API health check failed:', error);

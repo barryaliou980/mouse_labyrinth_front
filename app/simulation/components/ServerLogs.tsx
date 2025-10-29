@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Server, Wifi, WifiOff, AlertCircle, Info, Bug, AlertTriangle } from 'lucide-react';
+import { getApiUrl } from '@/lib/config';
 
 interface ServerLog {
   type: string;
@@ -84,7 +85,7 @@ const ServerLogs: React.FC<ServerLogsProps> = ({ className = '' }) => {
   useEffect(() => {
     const connectToSSE = () => {
       try {
-        const eventSource = new EventSource('http://localhost:8000/api/logs/stream');
+        const eventSource = new EventSource(getApiUrl('/api/logs/stream'));
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {

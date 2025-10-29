@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { IARequest, IAResponse, Direction } from '@/lib/types';
 import { MockIA } from '@/lib/mockIA';
+import { getApiUrl } from '@/lib/config';
 
 // POST /api/ia/move - Proxy vers le serveur Python IA
 export async function POST(request: NextRequest) {
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Vérifier si le serveur Python IA est configuré
-        const pythonServerUrl = process.env.PYTHON_IA_SERVER_URL || 'http://localhost:8000';
+        const pythonServerUrl = getApiUrl();
         const isPythonServerConfigured = true; // Always try to use Python server
     
     let iaResponse: IAResponse;
@@ -108,8 +109,8 @@ export async function POST(request: NextRequest) {
 // GET /api/ia/move - Vérifier la disponibilité du serveur Python IA
 export async function GET(request: NextRequest) {
   try {
-    const pythonServerUrl = process.env.PYTHON_IA_SERVER_URL || 'http://localhost:8000';
-    const healthEndpoint = `${pythonServerUrl}/api/health`;
+    const pythonServerUrl = getApiUrl();
+    const healthEndpoint = getApiUrl('/api/health');
     
     const response = await fetch(healthEndpoint, {
       method: 'GET',
