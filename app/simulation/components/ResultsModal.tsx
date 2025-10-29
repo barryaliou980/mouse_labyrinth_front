@@ -171,7 +171,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                             {isWinner && <span className="ml-2 text-green-600">👑</span>}
                           </h4>
                           <p className="text-sm text-gray-600">
-                            Type IA: {mouse.intelligenceType}
+                            Tag: {mouse.tag}
                           </p>
                         </div>
                       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Mouse as MouseType, Direction } from '@/lib/types';
+import { Mouse as MouseType } from '@/lib/types';
 
 interface MouseProps {
   mouse: MouseType;
@@ -61,20 +61,6 @@ const Mouse: React.FC<MouseProps> = ({
     }
   };
 
-  const getIntelligenceColor = (type: string): string => {
-    switch (type) {
-      case 'random':
-        return 'bg-purple-100 text-purple-800';
-      case 'directional':
-        return 'bg-blue-100 text-blue-800';
-      case 'smart':
-        return 'bg-green-100 text-green-800';
-      case 'social':
-        return 'bg-pink-100 text-pink-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   return (
     <div className="mouse-component relative">
@@ -92,9 +78,9 @@ const Mouse: React.FC<MouseProps> = ({
           
           <div className="space-y-1 text-xs">
             <div className="flex justify-between">
-              <span className="text-gray-700">Type IA:</span>
-              <span className={`px-1 py-0.5 rounded text-xs ${getIntelligenceColor(mouse.intelligenceType)}`}>
-                {mouse.intelligenceType}
+              <span className="text-gray-700">Tag:</span>
+              <span className="px-1 py-0.5 rounded text-xs bg-blue-100 text-blue-800">
+                {mouse.tag}
               </span>
             </div>
             

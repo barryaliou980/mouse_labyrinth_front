@@ -7,7 +7,7 @@ import MazeGrid from './components/MazeGrid';
 import SimulationPanel from './components/SimulationPanel';
 import ResultsModal from './components/ResultsModal';
 import ServerLogs from './components/ServerLogs';
-import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus } from '@/lib/types';
+import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus, Position } from '@/lib/types';
 import { PythonSimulation } from '@/lib/pythonSimulation';
 import { getAllMockLabyrinths, getMockLabyrinthById } from '@/lib/mockData';
 import { getRulesById } from '@/lib/rules';
