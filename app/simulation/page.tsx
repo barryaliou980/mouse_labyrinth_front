@@ -6,6 +6,7 @@ import { RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import MazeGrid from './components/MazeGrid';
 import SimulationPanel from './components/SimulationPanel';
 import ResultsModal from './components/ResultsModal';
+import ServerLogs from './components/ServerLogs';
 import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus } from '@/lib/types';
 import { PythonSimulation } from '@/lib/pythonSimulation';
 import { getAllMockLabyrinths, getMockLabyrinthById } from '@/lib/mockData';
@@ -128,8 +129,8 @@ export default function SimulationPage() {
       addLog(`Simulation démarrée avec ${config.mice.length} souris (API Python)`);
       
       // Log pour vérifier les souris créées
-      console.log('🐭 Souris créées dans la simulation:', simulation.mice);
-      console.log('🐭 Tags des souris:', simulation.mice.map(m => ({ name: m.name, tag: m.tag })));
+      console.log(' Souris créées dans la simulation:', simulation.mice);
+      console.log(' Tags des souris:', simulation.mice.map(m => ({ name: m.name, tag: m.tag })));
       
       // Démarrer la simulation avec l'API Python
       const pythonSim = new PythonSimulation(simulation);
@@ -171,10 +172,10 @@ export default function SimulationPage() {
       
       // Gestion spécifique de l'erreur hasOtherMiceNearby
       if (errorMessage.includes('hasOtherMiceNearby')) {
-        setError(`❌ ERREUR API PYTHON: Problème de communication avec l'API Python. Vérifiez que l'API Python est démarrée sur le port 8000. Détails: ${errorMessage}`);
-        addLog(`❌ ERREUR API PYTHON: Problème de communication avec l'API Python`);
-        addLog(`🔧 Solution: Vérifiez que l'API Python est démarrée sur le port 8000`);
-        addLog(`📡 Détails: ${errorMessage}`);
+        setError(` ERREUR API PYTHON: Problème de communication avec l'API Python. Vérifiez que l'API Python est démarrée sur le port 8000. Détails: ${errorMessage}`);
+        addLog(` ERREUR API PYTHON: Problème de communication avec l'API Python`);
+        addLog(` Solution: Vérifiez que l'API Python est démarrée sur le port 8000`);
+        addLog(` Détails: ${errorMessage}`);
       } else {
         setError(errorMessage);
         addLog(`Erreur: ${errorMessage}`);
@@ -388,6 +389,9 @@ export default function SimulationPage() {
             )}
           </div>
         </div>
+
+        {/* Logs du serveur */}
+        <ServerLogs className="mt-6" />
       </div>
 
       {/* Modal de résultats */}

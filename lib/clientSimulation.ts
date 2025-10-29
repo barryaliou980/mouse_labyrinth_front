@@ -116,8 +116,8 @@ export class ClientSimulation {
         const foundCheese = this.checkCheeseFound(mouse.position);
         if (foundCheese) {
           mouse.cheeseFound++;
-          this.log(`🎉 ${mouse.name} a trouvé du fromage ! Total: ${mouse.cheeseFound}`);
-          this.log(`🏁 Simulation terminée - ${mouse.name} a gagné !`);
+          this.log(` ${mouse.name} a trouvé du fromage ! Total: ${mouse.cheeseFound}`);
+          this.log(` Simulation terminée - ${mouse.name} a gagné !`);
           this.stop();
           return; // Arrêter immédiatement la simulation
         }
@@ -176,8 +176,8 @@ export class ClientSimulation {
       const data = await response.json();
       
       if (data.success) {
-        this.log(`🤖 ${mouse.name} - IA Python: ${data.data.reasoning}`);
-        this.log(`📍 Position: (${mouse.position.x}, ${mouse.position.y}) → Mouvement: ${data.data.move}`);
+        this.log(` ${mouse.name} - IA Python: ${data.data.reasoning}`);
+        this.log(` Position: (${mouse.position.x}, ${mouse.position.y}) → Mouvement: ${data.data.move}`);
         return data.data.move;
       } else {
         throw new Error(data.error || 'Erreur de l\'IA');
@@ -291,8 +291,8 @@ export class ClientSimulation {
     );
     
     if (winningMice.length > 0) {
-      this.log(`🎉 ${winningMice.map(m => m.name).join(', ')} ont gagné !`);
-      this.log(`📊 Statistiques des gagnants:`);
+      this.log(` ${winningMice.map(m => m.name).join(', ')} ont gagné !`);
+      this.log(` Statistiques des gagnants:`);
       winningMice.forEach(mouse => {
         this.log(`   ${mouse.name}: ${mouse.cheeseFound} fromages trouvés`);
       });

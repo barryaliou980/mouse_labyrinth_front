@@ -49,7 +49,7 @@ const MazeGrid: React.FC<MazeGridProps> = ({
   const getMouseAtPosition = (x: number, y: number): Mouse | undefined => {
     const mouse = mice.find(mouse => mouse.position.x === x && mouse.position.y === y);
     if (mouse) {
-      console.log(`🐭 Souris trouvée à (${x}, ${y}):`, mouse.name, 'Tag:', mouse.tag);
+      console.log(` Souris trouvée à (${x}, ${y}):`, mouse.name, 'Tag:', mouse.tag);
     }
     return mouse;
   };

@@ -20,15 +20,15 @@ const Mouse: React.FC<MouseProps> = ({
     // Changer l'emoji selon la direction du dernier mouvement
     switch (mouse.lastMove) {
       case 'north':
-        return '🐭⬆️';
+        return '⬆️';
       case 'south':
-        return '🐭⬇️';
+        return '⬇️';
       case 'east':
-        return '🐭➡️';
+        return '➡️';
       case 'west':
-        return '🐭⬅️';
+        return '⬅️';
       default:
-        return '🐭';
+        return '';
     }
   };
 

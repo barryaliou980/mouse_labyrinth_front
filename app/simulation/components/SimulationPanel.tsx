@@ -54,8 +54,8 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
   }, []);
   
   // Log pour vérifier l'état initial
-  console.log('🐭 État initial des souris:', mice);
-  console.log('🐭 Tag de la première souris:', mice[0]?.tag);
+  console.log(' État initial des souris:', mice);
+  console.log(' Tag de la première souris:', mice[0]?.tag);
   
   const [availableRules, setAvailableRules] = useState<SimulationRules[]>([]);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
@@ -104,7 +104,7 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
         startPosition: startPosition,
         tag: mice.length + 1
       };
-      console.log('🐭 Nouvelle souris créée:', newMouse);
+      console.log(' Nouvelle souris créée:', newMouse);
       setMice([...mice, newMouse]);
     }
   };
@@ -133,8 +133,8 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
       rulesId: selectedRules
     };
 
-    console.log('🐭 Configuration des souris:', mice);
-    console.log('🐭 Tags des souris:', mice.map(m => ({ name: m.name, tag: m.tag })));
+    console.log(' Configuration des souris:', mice);
+    console.log(' Tags des souris:', mice.map(m => ({ name: m.name, tag: m.tag })));
     onStartSimulation(config);
   };
 

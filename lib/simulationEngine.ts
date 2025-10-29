@@ -284,8 +284,8 @@ export class SimulationEngine {
     );
     
     if (winningMice.length > 0) {
-      this.log(`🎉 ${winningMice.map(m => m.name).join(', ')} ont gagné !`);
-      this.log(`📊 Statistiques des gagnants:`);
+      this.log(` ${winningMice.map(m => m.name).join(', ')} ont gagné !`);
+      this.log(` Statistiques des gagnants:`);
       winningMice.forEach(mouse => {
         this.log(`   ${mouse.name}: ${mouse.cheeseFound} fromages trouvés`);
       });

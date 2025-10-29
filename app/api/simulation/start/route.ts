@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
         mouse.tag = i + 1;
       }
       
-      console.log(`🐭 Souris créée: ${mouse.name}, Tag: ${mouse.tag}, Données reçues:`, mouseData);
-      console.log(`🐭 Tag reçu: ${mouseData.tag}, Tag assigné: ${mouse.tag}`);
+      console.log(` Souris créée: ${mouse.name}, Tag: ${mouse.tag}, Données reçues:`, mouseData);
+      console.log(` Tag reçu: ${mouseData.tag}, Tag assigné: ${mouse.tag}`);
       
       // Pour les règles prédéfinies, ne pas stocker en base
       if (!isPredefinedRule) {
