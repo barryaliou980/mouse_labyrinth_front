@@ -5,6 +5,9 @@ export interface Position {
   y: number;
 }
 
+// NEW: algorithms supported by the Python backend
+export type Algorithm = 'greedy' | 'random' | 'straight' | 'intelligent';
+
 export interface Mouse {
   id: string;
   name: string;
@@ -18,6 +21,7 @@ export interface Mouse {
   isAlive: boolean;
   lastMove?: Direction;
   tag: number; // Tag pour différencier les souris visuellement (1, 2, 3, etc.)
+  algorithm: Algorithm;
 }
 
 export interface Labyrinth {

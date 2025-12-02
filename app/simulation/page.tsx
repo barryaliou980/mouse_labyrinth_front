@@ -7,7 +7,7 @@ import MazeGrid from './components/MazeGrid';
 import SimulationPanel from './components/SimulationPanel';
 import ResultsModal from './components/ResultsModal';
 import ServerLogs from './components/ServerLogs';
-import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus, Position } from '@/lib/types';
+import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus, Position, Algorithm } from '@/lib/types';
 import { PythonSimulation } from '@/lib/pythonSimulation';
 import { getAllMockLabyrinths, getMockLabyrinthById } from '@/lib/mockData';
 import { getRulesById } from '@/lib/rules';
@@ -97,7 +97,7 @@ export default function SimulationPage() {
         id: `sim-${Date.now()}`,
         labyrinthId: config.labyrinthId,
         labyrinth,
-        mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number }, index: number) => {
+        mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number; algorithm: Algorithm }, index: number) => {
           // Utiliser les positions de départ du labyrinthe si disponible
           const startPos = labyrinth.startPositions && labyrinth.startPositions.length > 0 
             ? labyrinth.startPositions[index % labyrinth.startPositions.length]
@@ -114,7 +114,8 @@ export default function SimulationPage() {
             cheeseFound: 0,
             moves: 0,
             isAlive: true,
-            tag: mouseConfig.tag || (index + 1)
+            tag: mouseConfig.tag || (index + 1),
+            algorithm: mouseConfig.algorithm,
           };
         }),
         rules,
@@ -337,6 +338,12 @@ export default function SimulationPage() {
                           <div className="flex justify-between">
                             <span className="text-gray-700">Fromages:</span>
                             <span className="text-yellow-600 font-medium">{mouse.cheeseFound}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-700">Algorithme:</span>
+                            <span className="text-gray-900 font-medium">
+                              {mouse.algorithm}
+                            </span>
                           </div>
                         </div>
                       </div>

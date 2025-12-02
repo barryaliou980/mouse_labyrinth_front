@@ -416,7 +416,8 @@ export class PythonSimulation {
           happiness: mouse.happiness,
           energy: mouse.energy,
           cheeseFound: mouse.cheeseFound,
-          tag: mouse.tag
+          tag: mouse.tag,
+          algorithm: mouse.algorithm
         } as any,
         availableMoves,
         available_cheeses: uncollectedCheeses // Passer les fromages disponibles pour l'optimisation
