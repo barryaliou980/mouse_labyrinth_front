@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { DatabaseLabyrinth, DatabaseSimulationRules, DatabaseSimulation, DatabaseMouse } from './types';
+import { DatabaseLabyrinth, DatabaseSimulationRules, DatabaseSimulation, DatabaseMouse, DatabaseSharedSimulation } from './types';
 import { mockLabyrinths, getMockLabyrinthById, getAllMockLabyrinths } from './mockData';
 import { predefinedRules, getAllRules } from './rules';
 
@@ -38,6 +38,11 @@ export interface Database {
         Row: DatabaseMouse;
         Insert: Omit<DatabaseMouse, 'id'>;
         Update: Partial<Omit<DatabaseMouse, 'id'>>;
+      };
+      shared_simulations: {
+        Row: DatabaseSharedSimulation;
+        Insert: Omit<DatabaseSharedSimulation, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<DatabaseSharedSimulation, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };
@@ -440,6 +445,113 @@ export async function updateMouse(id: string, updates: Database['public']['Table
   }
   
   return data;
+}
+
+// Partages de simulations
+export async function createSharedSimulation(simulationId: string, expiresInDays?: number) {
+  // Si Supabase n'est pas configuré, simuler la création
+  if (!isSupabaseConfigured || !supabase) {
+    console.log('Supabase non configuré, simulation de création de partage');
+    const token = `share-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    return {
+      id: `shared-${Date.now()}`,
+      simulation_id: simulationId,
+      share_token: token,
+      expires_at: expiresInDays ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString() : null,
+      view_count: 0,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+  }
+
+  // Générer un token unique
+  const token = `share-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  
+  // Calculer la date d'expiration si fournie
+  const expiresAt = expiresInDays 
+    ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString()
+    : null;
+
+  const { data, error } = await supabase
+    .from('shared_simulations')
+    .insert({
+      simulation_id: simulationId,
+      share_token: token,
+      expires_at: expiresAt,
+      view_count: 0,
+      is_active: true
+    })
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error creating shared simulation:', error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function getSharedSimulationByToken(token: string) {
+  // Si Supabase n'est pas configuré, retourner null
+  if (!isSupabaseConfigured || !supabase) {
+    console.log('Supabase non configuré, impossible de récupérer le partage');
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('shared_simulations')
+    .select(`
+      *,
+      simulations (
+        *,
+        labyrinths (*),
+        mice (*)
+      )
+    `)
+    .eq('share_token', token)
+    .eq('is_active', true)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching shared simulation:', error);
+    return null;
+  }
+  
+  // Vérifier si le partage a expiré
+  if (data.expires_at && new Date(data.expires_at) < new Date()) {
+    console.log('Shared simulation has expired');
+    return null;
+  }
+  
+  // Incrémenter le compteur de vues
+  await supabase
+    .from('shared_simulations')
+    .update({ view_count: data.view_count + 1 })
+    .eq('id', data.id);
+  
+  return data;
+}
+
+export async function deleteSharedSimulation(token: string) {
+  // Si Supabase n'est pas configuré, simuler la suppression
+  if (!isSupabaseConfigured || !supabase) {
+    console.log('Supabase non configuré, simulation de suppression de partage');
+    return { token };
+  }
+
+  const { error } = await supabase
+    .from('shared_simulations')
+    .update({ is_active: false })
+    .eq('share_token', token);
+  
+  if (error) {
+    console.error('Error deleting shared simulation:', error);
+    throw error;
+  }
+  
+  return { token };
 }
 
 // Fonction pour initialiser la base de données avec des labyrinthes et règles d'exemple

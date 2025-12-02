@@ -36,12 +36,89 @@ export default function LabyrinthEditor({ labyrinth, onSave, onCancel }: Labyrin
       )
     );
     setGrid(newGrid);
+    
+    // Nettoyer les positions invalides (hors des nouvelles dimensions)
+    setStartPositions(prev => prev.filter(pos => pos.x < width && pos.y < height));
+    setCheesePositions(prev => prev.filter(pos => pos.x < width && pos.y < height));
   }, [width, height]);
+  
+  // Synchroniser la grille avec les positions de départ et de fromage lors du chargement
+  React.useEffect(() => {
+    if (labyrinth && labyrinth.startPositions && labyrinth.cheesePositions) {
+      // Synchroniser la grille avec les positions de départ et de fromage du labyrinthe chargé
+      setGrid(prevGrid => {
+        const newGrid = prevGrid.map(row => [...row]);
+        // Marquer toutes les positions de départ
+        labyrinth.startPositions.forEach(pos => {
+          if (newGrid[pos.y] && newGrid[pos.y][pos.x] !== 'wall') {
+            newGrid[pos.y][pos.x] = 'start';
+          }
+        });
+        // Marquer toutes les positions de fromage
+        labyrinth.cheesePositions.forEach(pos => {
+          if (newGrid[pos.y] && newGrid[pos.y][pos.x] !== 'wall') {
+            newGrid[pos.y][pos.x] = 'cheese';
+          }
+        });
+        return newGrid;
+      });
+    }
+  }, [labyrinth?.id]); // Seulement quand le labyrinthe change
+  
+  // Initialiser une position de départ par défaut si aucune n'est définie (nouveau labyrinthe uniquement)
+  React.useEffect(() => {
+    // Seulement si c'est un nouveau labyrinthe (pas de labyrinthe existant) et qu'il n'y a pas de positions de départ
+    if (!labyrinth && startPositions.length === 0 && width > 0 && height > 0) {
+      // Ajouter une position de départ par défaut à (1, 1)
+      const defaultX = Math.min(1, width - 1);
+      const defaultY = Math.min(1, height - 1);
+      setStartPositions([{ x: defaultX, y: defaultY }]);
+      // Mettre à jour la grille pour marquer cette position comme départ
+      setGrid(prevGrid => {
+        const newGrid = prevGrid.map(row => [...row]);
+        if (newGrid[defaultY] && newGrid[defaultY][defaultX] !== 'wall') {
+          newGrid[defaultY][defaultX] = 'start';
+        }
+        return newGrid;
+      });
+    }
+  }, [labyrinth, width, height]); // Quand le labyrinthe ou les dimensions changent
 
   const handleCellClick = (x: number, y: number) => {
     const newGrid = [...grid];
+    const oldCellType = newGrid[y][x];
     newGrid[y][x] = selectedCellType;
     setGrid(newGrid);
+    
+    // Synchroniser les positions de départ
+    if (selectedCellType === 'start') {
+      // Ajouter la position si elle n'existe pas déjà
+      setStartPositions(prev => {
+        const exists = prev.some(pos => pos.x === x && pos.y === y);
+        if (!exists) {
+          return [...prev, { x, y }];
+        }
+        return prev;
+      });
+    } else if (oldCellType === 'start') {
+      // Retirer la position si on change le type de cellule
+      setStartPositions(prev => prev.filter(pos => !(pos.x === x && pos.y === y)));
+    }
+    
+    // Synchroniser les positions de fromage
+    if (selectedCellType === 'cheese') {
+      // Ajouter la position si elle n'existe pas déjà
+      setCheesePositions(prev => {
+        const exists = prev.some(pos => pos.x === x && pos.y === y);
+        if (!exists) {
+          return [...prev, { x, y }];
+        }
+        return prev;
+      });
+    } else if (oldCellType === 'cheese') {
+      // Retirer la position si on change le type de cellule
+      setCheesePositions(prev => prev.filter(pos => !(pos.x === x && pos.y === y)));
+    }
   };
 
   const getCellColor = (cellType: CellType): string => {

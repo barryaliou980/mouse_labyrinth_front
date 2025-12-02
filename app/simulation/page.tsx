@@ -7,6 +7,7 @@ import MazeGrid from './components/MazeGrid';
 import SimulationPanel from './components/SimulationPanel';
 import ResultsModal from './components/ResultsModal';
 import ServerLogs from './components/ServerLogs';
+import ShareModal from './components/ShareModal';
 import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus, Position } from '@/lib/types';
 import { PythonSimulation } from '@/lib/pythonSimulation';
 import { getAllMockLabyrinths, getMockLabyrinthById } from '@/lib/mockData';
@@ -22,6 +23,7 @@ export default function SimulationPage() {
   const [logs, setLogs] = useState<string[]>([]);
   const [pythonSimulation, setPythonSimulation] = useState<PythonSimulation | null>(null);
   const [showResultsModal, setShowResultsModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [winner, setWinner] = useState<Mouse | null>(null);
 
   // Charger les labyrinths au montage du composant
@@ -92,80 +94,242 @@ export default function SimulationPage() {
         throw new Error('Règles non trouvées');
       }
       
-      // Créer la simulation côté client
-      const simulation: Simulation = {
-        id: `sim-${Date.now()}`,
-        labyrinthId: config.labyrinthId,
-        labyrinth,
-        mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number }, index: number) => {
-          // Utiliser les positions de départ du labyrinthe si disponible
+      // Sauvegarder la simulation dans la base de données pour permettre la synchronisation
+      addLog('Sauvegarde de la simulation dans la base de données...');
+      
+      try {
+        // Vérifier et créer le labyrinthe si nécessaire
+        const { getLabyrinthById, createLabyrinth } = await import('@/lib/supabaseClient');
+        let labyrinthId = config.labyrinthId;
+        try {
+          await getLabyrinthById(labyrinthId);
+        } catch (error) {
+          // Le labyrinthe n'existe pas, le créer
+          const newLabyrinth = await createLabyrinth({
+            name: labyrinth.name,
+            description: labyrinth.description,
+            grid_data: {
+              width: labyrinth.width,
+              height: labyrinth.height,
+              grid: labyrinth.grid,
+              startPositions: labyrinth.startPositions,
+              cheesePositions: labyrinth.cheesePositions
+            }
+          });
+          labyrinthId = newLabyrinth.id;
+        }
+        
+        // Vérifier et créer la règle si nécessaire
+        const { getSimulationRuleById, createSimulationRule, supabase } = await import('@/lib/supabaseClient');
+        let rulesId = config.rulesId;
+        const isPredefinedRule = !rulesId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        
+        if (isPredefinedRule) {
+          // Chercher la règle par nom
+          if (supabase) {
+            const { data: existingRule } = await supabase
+              .from('simulation_rules')
+              .select('*')
+              .eq('name', rules.name)
+              .eq('is_predefined', true)
+              .maybeSingle();
+            
+            if (existingRule) {
+              rulesId = existingRule.id;
+            } else {
+              // Créer la règle
+              const newRule = await createSimulationRule({
+                name: rules.name,
+                description: rules.description,
+                rules_data: rules as unknown as Record<string, unknown>,
+                is_predefined: true
+              });
+              rulesId = newRule.id;
+            }
+          }
+        }
+        
+        // Créer la simulation dans la base de données
+        const { createSimulation, createMouse } = await import('@/lib/supabaseClient');
+        const dbSimulation = await createSimulation({
+          labyrinth_id: labyrinthId,
+          rules_id: rulesId,
+          start_time: new Date().toISOString(),
+          status: 'running'
+        });
+        
+        // Créer les souris dans la base de données
+        const dbMice = [];
+        for (let i = 0; i < config.mice.length; i++) {
+          const mouseConfig = config.mice[i];
           const startPos = labyrinth.startPositions && labyrinth.startPositions.length > 0 
-            ? labyrinth.startPositions[index % labyrinth.startPositions.length]
-            : { x: 1, y: 1 }; // Position par défaut valide
+            ? labyrinth.startPositions[i % labyrinth.startPositions.length]
+            : { x: 1, y: 1 };
           
-          return {
-            id: `mouse-${index}`,
+          const dbMouse = await createMouse({
+            simulation_id: dbSimulation.id,
             name: mouseConfig.name,
-            position: startPos,
-            movementDelay: mouseConfig.movementDelay,
+            intelligence_type: 'smart',
+            initial_position: startPos,
+            final_position: startPos,
             health: rules.maxEnergy,
             happiness: rules.maxHappiness,
             energy: rules.maxEnergy,
-            cheeseFound: 0,
+            cheese_found: 0,
             moves: 0,
-            isAlive: true,
-            tag: mouseConfig.tag || (index + 1)
-          };
-        }),
-        rules,
-        status: 'running',
-        currentTurn: 0,
-        maxTurns: Infinity, // Simulation infinie
-        startTime: new Date().toISOString()
-      };
-      
-      setCurrentSimulation(simulation);
-      setIsRunning(true);
-      addLog(`Simulation démarrée avec ${config.mice.length} souris (API Python)`);
-      
-      // Log pour vérifier les souris créées
-      console.log(' Souris créées dans la simulation:', simulation.mice);
-      console.log(' Tags des souris:', simulation.mice.map(m => ({ name: m.name, tag: m.tag })));
-      
-      // Démarrer la simulation avec l'API Python
-      const pythonSim = new PythonSimulation(simulation);
-      setPythonSimulation(pythonSim);
-      
-      pythonSim.start(
-        (updatedSimulation) => {
-          setCurrentSimulation(updatedSimulation);
-          
-          // Vérifier si une souris a trouvé du fromage
-          const winningMouse = updatedSimulation.mice.find(mouse => 
-            mouse.cheeseFound > 0 && updatedSimulation.status === 'completed'
-          );
-          
-          if (winningMouse) {
-            setWinner(winningMouse);
-            setShowResultsModal(true);
-            setIsRunning(false);
-          }
-        },
-        (message) => {
-          addLog(message);
-          
-          // Détecter si le message indique qu'une souris a gagné (tous les fromages collectés)
-          if (message.includes('🏆') && message.includes('a collecté tous les fromages')) {
-            const mouseName = message.split(' ')[1]; // Extraire le nom de la souris
-            const winningMouse = simulation.mice.find(mouse => mouse.name === mouseName);
+            is_alive: true
+          });
+          dbMice.push(dbMouse);
+        }
+        
+        // Créer la simulation côté client avec les IDs de la base de données
+        const simulation: Simulation = {
+          id: dbSimulation.id,
+          labyrinthId: labyrinthId,
+          labyrinth: { ...labyrinth, id: labyrinthId },
+          mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number }, index: number) => {
+            const startPos = labyrinth.startPositions && labyrinth.startPositions.length > 0 
+              ? labyrinth.startPositions[index % labyrinth.startPositions.length]
+              : { x: 1, y: 1 };
+            
+            return {
+              id: dbMice[index].id, // Utiliser l'ID de la base de données
+              name: mouseConfig.name,
+              position: startPos,
+              movementDelay: mouseConfig.movementDelay,
+              health: rules.maxEnergy,
+              happiness: rules.maxHappiness,
+              energy: rules.maxEnergy,
+              cheeseFound: 0,
+              moves: 0,
+              isAlive: true,
+              tag: mouseConfig.tag || (index + 1)
+            };
+          }),
+          rules,
+          status: 'running',
+          currentTurn: 0,
+          maxTurns: Infinity,
+          startTime: dbSimulation.start_time
+        };
+        
+        setCurrentSimulation(simulation);
+        setIsRunning(true);
+        addLog(`Simulation démarrée avec ${config.mice.length} souris (API Python)`);
+        addLog(`Simulation sauvegardée dans la base de données (ID: ${dbSimulation.id})`);
+        
+        // Démarrer la simulation avec l'API Python
+        const pythonSim = new PythonSimulation(simulation, dbSimulation.id);
+        setPythonSimulation(pythonSim);
+        
+        // La synchronisation fonctionnera automatiquement maintenant
+        pythonSim.start(
+          (updatedSimulation) => {
+            setCurrentSimulation(updatedSimulation);
+            
+            // Si on a partagé la simulation, mettre à jour l'ID de la base de données
+            if (updatedSimulation.id && !updatedSimulation.id.startsWith('sim-')) {
+              pythonSim.setDatabaseId(updatedSimulation.id);
+            }
+            
+            // Vérifier si une souris a trouvé du fromage
+            const winningMouse = updatedSimulation.mice.find(mouse => 
+              mouse.cheeseFound > 0 && updatedSimulation.status === 'completed'
+            );
+            
             if (winningMouse) {
               setWinner(winningMouse);
               setShowResultsModal(true);
               setIsRunning(false);
             }
+          },
+          (message) => {
+            addLog(message);
+            
+            // Détecter si le message indique qu'une souris a gagné (tous les fromages collectés)
+            if (message.includes('🏆') && message.includes('a collecté tous les fromages')) {
+              const mouseName = message.split(' ')[1]; // Extraire le nom de la souris
+              const winningMouse = simulation.mice.find(mouse => mouse.name === mouseName);
+              if (winningMouse) {
+                setWinner(winningMouse);
+                setShowResultsModal(true);
+                setIsRunning(false);
+              }
+            }
           }
-        }
-      );
+        );
+        
+      } catch (saveError) {
+        // Erreur lors de la sauvegarde dans la base de données
+        console.error('Error saving simulation to database:', saveError);
+        addLog('Erreur lors de la sauvegarde dans la base de données, la simulation continue sans synchronisation');
+        // Continuer quand même avec la simulation locale
+        const localSimulation: Simulation = {
+          id: `sim-${Date.now()}`,
+          labyrinthId: config.labyrinthId,
+          labyrinth,
+          mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number }, index: number) => {
+            const startPos = labyrinth.startPositions && labyrinth.startPositions.length > 0 
+              ? labyrinth.startPositions[index % labyrinth.startPositions.length]
+              : { x: 1, y: 1 };
+            
+            return {
+              id: `mouse-${index}`,
+              name: mouseConfig.name,
+              position: startPos,
+              movementDelay: mouseConfig.movementDelay,
+              health: rules.maxEnergy,
+              happiness: rules.maxHappiness,
+              energy: rules.maxEnergy,
+              cheeseFound: 0,
+              moves: 0,
+              isAlive: true,
+              tag: mouseConfig.tag || (index + 1)
+            };
+          }),
+          rules,
+          status: 'running',
+          currentTurn: 0,
+          maxTurns: Infinity,
+          startTime: new Date().toISOString()
+        };
+        
+        setCurrentSimulation(localSimulation);
+        setIsRunning(true);
+        addLog(`Simulation démarrée avec ${config.mice.length} souris (API Python - mode local)`);
+        
+        const pythonSim = new PythonSimulation(localSimulation);
+        setPythonSimulation(pythonSim);
+        
+        pythonSim.start(
+          (updatedSimulation) => {
+            setCurrentSimulation(updatedSimulation);
+            
+            const winningMouse = updatedSimulation.mice.find(mouse => 
+              mouse.cheeseFound > 0 && updatedSimulation.status === 'completed'
+            );
+            
+            if (winningMouse) {
+              setWinner(winningMouse);
+              setShowResultsModal(true);
+              setIsRunning(false);
+            }
+          },
+          (message) => {
+            addLog(message);
+            
+            if (message.includes('🏆') && message.includes('a collecté tous les fromages')) {
+              const mouseName = message.split(' ')[1];
+              const winningMouse = localSimulation.mice.find(mouse => mouse.name === mouseName);
+              if (winningMouse) {
+                setWinner(winningMouse);
+                setShowResultsModal(true);
+                setIsRunning(false);
+              }
+            }
+          }
+        );
+      }
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
@@ -236,7 +400,7 @@ export default function SimulationPage() {
 
   return (
     <Layout>
-      <div className={`simulation-page min-h-screen bg-gray-50 ${showResultsModal ? 'backdrop-blur-sm' : ''}`} style={{ color: '#111827' }}>
+      <div className={`simulation-page min-h-screen bg-gray-50 ${showResultsModal || showShareModal ? 'backdrop-blur-sm' : ''}`} style={{ color: '#111827' }}>
         {/* Header de simulation */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -252,18 +416,31 @@ export default function SimulationPage() {
                   </div>
                 )}
               </div>
-              <button
-                onClick={loadLabyrinths}
-                disabled={isLoading}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
-              >
-                {isLoading ? 'Chargement...' : 'Actualiser'}
-              </button>
+              <div className="flex gap-2">
+                {currentSimulation && (
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Partager
+                  </button>
+                )}
+                <button
+                  onClick={loadLabyrinths}
+                  disabled={isLoading}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+                >
+                  {isLoading ? 'Chargement...' : 'Actualiser'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all duration-300 ${showResultsModal ? 'pointer-events-none' : ''}`}>
+      <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all duration-300 ${showResultsModal || showShareModal ? 'pointer-events-none' : ''}`}>
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center gap-2 text-red-800">
@@ -404,6 +581,24 @@ export default function SimulationPage() {
         simulation={currentSimulation}
         winner={winner}
       />
+
+      {/* Modal de partage */}
+      {currentSimulation && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          simulationId={currentSimulation.id}
+          simulation={currentSimulation}
+          onSimulationSaved={(savedId) => {
+            // Mettre à jour l'ID de la simulation et informer PythonSimulation
+            if (pythonSimulation) {
+              pythonSimulation.setDatabaseId(savedId);
+            }
+            // Mettre à jour l'ID de la simulation actuelle
+            setCurrentSimulation(prev => prev ? { ...prev, id: savedId } : null);
+          }}
+        />
+      )}
       </div>
     </Layout>
   );

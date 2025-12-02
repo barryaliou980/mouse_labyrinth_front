@@ -200,6 +200,17 @@ export interface DatabaseMouse {
   is_alive: boolean;
 }
 
+export interface DatabaseSharedSimulation {
+  id: string;
+  simulation_id: string;
+  share_token: string;
+  expires_at?: string;
+  view_count: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Types pour les règles prédéfinies
 export interface PredefinedRules {
   [key: string]: SimulationRules;
@@ -223,4 +234,13 @@ export interface SimulationConfig {
     startPosition?: Position;
     tag: number; // Tag pour différencier les souris visuellement
   }>;
+}
+
+// Types pour le partage de simulations
+export interface SharedSimulation {
+  shareToken: string;
+  shareUrl: string;
+  expiresAt?: string;
+  viewCount: number;
+  isActive: boolean;
 }

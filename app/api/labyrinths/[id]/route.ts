@@ -22,6 +22,24 @@ export async function GET(
     
     const dbLabyrinth = await getLabyrinthById(id);
     
+    // S'assurer que startPositions est toujours un tableau
+    let startPositions = dbLabyrinth.grid_data.startPositions || [];
+    if (!Array.isArray(startPositions) || startPositions.length === 0) {
+      // Si aucune position de départ n'est définie, utiliser une position par défaut (1, 1)
+      startPositions = [{ x: 1, y: 1 }];
+    }
+    
+    // Créer une copie de la grille pour éviter de modifier l'original
+    const grid = dbLabyrinth.grid_data.grid.map((row: any[]) => [...row]);
+    const cheesePositions = dbLabyrinth.grid_data.cheesePositions || [];
+    
+    // Restaurer tous les fromages dans la grille en se basant sur cheesePositions
+    cheesePositions.forEach((pos: { x: number; y: number }) => {
+      if (grid[pos.y] && grid[pos.y][pos.x]) {
+        grid[pos.y][pos.x] = 'cheese';
+      }
+    });
+    
     // Transformer les données de la base vers le format attendu
     const labyrinth: Labyrinth = {
       id: dbLabyrinth.id,
@@ -29,9 +47,9 @@ export async function GET(
       description: dbLabyrinth.description,
       width: dbLabyrinth.grid_data.width,
       height: dbLabyrinth.grid_data.height,
-      grid: dbLabyrinth.grid_data.grid,
-      startPositions: dbLabyrinth.grid_data.startPositions,
-      cheesePositions: dbLabyrinth.grid_data.cheesePositions,
+      grid: grid,
+      startPositions: startPositions,
+      cheesePositions: cheesePositions,
       createdAt: dbLabyrinth.created_at,
       updatedAt: dbLabyrinth.updated_at
     };
@@ -85,6 +103,17 @@ export async function PUT(
       );
     }
 
+    // Valider que startPositions est fourni et non vide
+    if (!startPositions || !Array.isArray(startPositions) || startPositions.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Au moins une position de départ est requise'
+        },
+        { status: 400 }
+      );
+    }
+
     const updatedLabyrinth = await updateLabyrinth(id, {
       name,
       description,
@@ -97,6 +126,12 @@ export async function PUT(
       }
     });
 
+    // S'assurer que startPositions est toujours un tableau
+    let formattedStartPositions = updatedLabyrinth.grid_data.startPositions || [];
+    if (!Array.isArray(formattedStartPositions) || formattedStartPositions.length === 0) {
+      formattedStartPositions = [{ x: 1, y: 1 }];
+    }
+
     // Transformer les données de la base vers le format attendu
     const formattedLabyrinth: Labyrinth = {
       id: updatedLabyrinth.id,
@@ -105,8 +140,8 @@ export async function PUT(
       width: updatedLabyrinth.grid_data.width,
       height: updatedLabyrinth.grid_data.height,
       grid: updatedLabyrinth.grid_data.grid,
-      startPositions: updatedLabyrinth.grid_data.startPositions,
-      cheesePositions: updatedLabyrinth.grid_data.cheesePositions,
+      startPositions: formattedStartPositions,
+      cheesePositions: updatedLabyrinth.grid_data.cheesePositions || [],
       createdAt: updatedLabyrinth.created_at,
       updatedAt: updatedLabyrinth.updated_at
     };

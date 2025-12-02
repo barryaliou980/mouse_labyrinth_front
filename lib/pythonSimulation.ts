@@ -13,10 +13,18 @@ export class PythonSimulation {
   private totalCheesesCount: number = 0; // Nombre total de fromages au début // Suivi des fromages collectés
   private mouseThreads: Map<string, NodeJS.Timeout> = new Map(); // Threads individuels pour chaque souris
   private endCheckInterval: NodeJS.Timeout | null = null; // Intervalle pour vérifier la fin de simulation
+  private dbSimulationId: string | null = null; // ID de la simulation dans la base de données
+  private syncTimeout: NodeJS.Timeout | null = null; // Timeout pour debounce la synchronisation
 
-  constructor(simulation: Simulation) {
+  constructor(simulation: Simulation, dbSimulationId?: string) {
     this.simulation = { ...simulation };
+    this.dbSimulationId = dbSimulationId || null;
     this.initializeCheeseTracking();
+  }
+  
+  // Définir l'ID de la simulation dans la base de données
+  setDatabaseId(simulationId: string) {
+    this.dbSimulationId = simulationId;
   }
 
   // Initialiser le suivi des fromages
@@ -100,9 +108,13 @@ export class PythonSimulation {
   // Restaurer la grille originale avec tous les fromages
   private restoreOriginalGrid() {
     // Restaurer tous les fromages dans la grille
+    // On force la restauration de tous les fromages depuis cheesePositions
+    // pour s'assurer que la grille est toujours dans son état original
     this.simulation.labyrinth.cheesePositions.forEach(cheesePos => {
       if (this.simulation.labyrinth.grid[cheesePos.y] && 
-          this.simulation.labyrinth.grid[cheesePos.y][cheesePos.x] === 'path') {
+          this.simulation.labyrinth.grid[cheesePos.y][cheesePos.x]) {
+        // Forcer la restauration du fromage, peu importe l'état actuel de la cellule
+        // (elle peut être 'path' si un fromage a été collecté précédemment)
         this.simulation.labyrinth.grid[cheesePos.y][cheesePos.x] = 'cheese';
       }
     });
@@ -232,6 +244,12 @@ export class PythonSimulation {
     // Nettoyer les instances d'IA Python
     this.cleanupPythonAI();
     
+    // Nettoyer le timeout de synchronisation
+    if (this.syncTimeout) {
+      clearTimeout(this.syncTimeout);
+      this.syncTimeout = null;
+    }
+    
     this.simulation.status = 'completed';
     this.simulation.endTime = new Date().toISOString();
     this.log('Simulation arrêtée - Tous les threads fermés');
@@ -340,6 +358,15 @@ export class PythonSimulation {
           
           // Retirer le fromage de la grille
           this.removeCheeseFromGrid(newPosition);
+          
+          // Synchroniser immédiatement la grille avec la base de données
+          if (this.dbSimulationId) {
+            import('./simulationSync').then(({ syncLabyrinthGrid }) => {
+              syncLabyrinthGrid(this.simulation.labyrinth, this.dbSimulationId!);
+            }).catch(error => {
+              console.debug('Error syncing grid after cheese collection:', error);
+            });
+          }
           
           // Vérifier si tous les fromages atteignables ont été collectés
           if (this.checkAllCheesesCollected()) {
@@ -625,6 +652,25 @@ export class PythonSimulation {
         mice: this.simulation.mice.map(mouse => ({ ...mouse }))
       };
       this.onUpdate(updatedSimulation);
+    }
+    
+    // Synchroniser avec la base de données si l'ID est disponible (avec debounce)
+    if (this.dbSimulationId) {
+      // Annuler le timeout précédent
+      if (this.syncTimeout) {
+        clearTimeout(this.syncTimeout);
+      }
+      
+      // Programmer une nouvelle synchronisation après 300ms (debounce pour réduire les glitches mais garder la réactivité)
+      this.syncTimeout = setTimeout(() => {
+        import('./simulationSync').then(({ syncSimulationToDatabase }) => {
+          syncSimulationToDatabase(this.simulation, this.dbSimulationId!);
+        }).catch(error => {
+          // Ignorer les erreurs de synchronisation silencieusement
+          console.debug('Sync error (non-critical):', error);
+        });
+        this.syncTimeout = null;
+      }, 300); // Debounce de 300ms pour équilibrer performance et réactivité
     }
   }
 

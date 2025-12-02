@@ -1,0 +1,32 @@
+/* Styles pour la page de visualisation partagée */
+.shared-simulation-view {
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+/* Assurer que tous les textes sont opaques */
+.shared-simulation-view * {
+  color: inherit;
+}
+
+/* Forcer l'opacité sur les textes spécifiques */
+.shared-simulation-view h1,
+.shared-simulation-view h2,
+.shared-simulation-view h3,
+.shared-simulation-view p,
+.shared-simulation-view span {
+  opacity: 1 !important;
+  color: inherit;
+}
+
+/* Forcer l'opacité sur la section d'informations de partage */
+.bg-blue-50 h3,
+.bg-blue-50 p {
+  opacity: 1 !important;
+  color: #1e3a8a !important;
+}
+
+.bg-blue-50 p {
+  color: #1e40af !important;
+}
+

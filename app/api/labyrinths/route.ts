@@ -11,18 +11,39 @@ export async function GET(request: NextRequest) {
     const labyrinths = await getLabyrinths();
     
     // Transformer les données de la base vers le format attendu
-    const formattedLabyrinths: Labyrinth[] = labyrinths.map((dbLabyrinth) => ({
-      id: dbLabyrinth.id,
-      name: dbLabyrinth.name,
-      description: dbLabyrinth.description,
-      width: dbLabyrinth.grid_data.width,
-      height: dbLabyrinth.grid_data.height,
-      grid: dbLabyrinth.grid_data.grid,
-      startPositions: dbLabyrinth.grid_data.startPositions,
-      cheesePositions: dbLabyrinth.grid_data.cheesePositions,
-      createdAt: dbLabyrinth.created_at,
-      updatedAt: dbLabyrinth.updated_at
-    }));
+    // Restaurer tous les fromages dans la grille pour garantir que la grille est toujours dans son état original
+    const formattedLabyrinths: Labyrinth[] = labyrinths.map((dbLabyrinth) => {
+      // Créer une copie de la grille pour éviter de modifier l'original
+      const grid = dbLabyrinth.grid_data.grid.map((row: any[]) => [...row]);
+      const cheesePositions = dbLabyrinth.grid_data.cheesePositions || [];
+      
+      // Restaurer tous les fromages dans la grille en se basant sur cheesePositions
+      cheesePositions.forEach((pos: { x: number; y: number }) => {
+        if (grid[pos.y] && grid[pos.y][pos.x]) {
+          grid[pos.y][pos.x] = 'cheese';
+        }
+      });
+      
+      // S'assurer que startPositions est toujours un tableau
+      let startPositions = dbLabyrinth.grid_data.startPositions || [];
+      if (!Array.isArray(startPositions) || startPositions.length === 0) {
+        // Si aucune position de départ n'est définie, utiliser une position par défaut (1, 1)
+        startPositions = [{ x: 1, y: 1 }];
+      }
+      
+      return {
+        id: dbLabyrinth.id,
+        name: dbLabyrinth.name,
+        description: dbLabyrinth.description,
+        width: dbLabyrinth.grid_data.width,
+        height: dbLabyrinth.grid_data.height,
+        grid: grid,
+        startPositions: startPositions,
+        cheesePositions: cheesePositions,
+        createdAt: dbLabyrinth.created_at,
+        updatedAt: dbLabyrinth.updated_at
+      };
+    });
     
     return NextResponse.json({
       success: true,
