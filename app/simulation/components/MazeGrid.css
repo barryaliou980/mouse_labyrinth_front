@@ -48,6 +48,15 @@
   justify-content: center;
 }
 
+/* Badge bleu sur la souris - forcer le texte blanc */
+.maze-grid .mouse span.bg-blue-600 {
+  color: #ffffff !important;
+}
+
+.maze-grid .bg-blue-600 {
+  color: #ffffff !important;
+}
+
 /* Grille */
 .maze-grid .grid {
   display: grid;

@@ -164,7 +164,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                         </span>
                         <div>
                           <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-                            <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                            <span 
+                              className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                              style={{ color: '#ffffff' }}
+                            >
                               {mouse.tag}
                             </span>
                             {mouse.name}

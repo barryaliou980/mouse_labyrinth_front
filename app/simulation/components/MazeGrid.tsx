@@ -92,7 +92,10 @@ const MazeGrid: React.FC<MazeGridProps> = ({
                 {mouse ? (
                   <div className="mouse relative">
                     <span className="text-lg">🐭</span>
-                    <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border border-white">
+                    <span 
+                      className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border border-white"
+                      style={{ color: '#ffffff' }}
+                    >
                       {(() => {
                         // Forcer la définition du tag avec plusieurs fallbacks
                         let tag = mouse.tag;
@@ -133,7 +136,10 @@ const MazeGrid: React.FC<MazeGridProps> = ({
        <div className="flex items-center gap-2">
          <div className="relative">
            <span className="text-lg">🐭</span>
-           <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">1</span>
+           <span 
+             className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold"
+             style={{ color: '#ffffff' }}
+           >1</span>
          </div>
          <span>Souris (Tag)</span>
        </div>
