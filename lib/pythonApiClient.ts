@@ -1,4 +1,4 @@
-import { Mouse, Labyrinth, CellType } from './types';
+import { Mouse, Labyrinth, CellType, Algorithm } from './types';
 import { getApiUrl } from './config';
 
 export interface MouseMoveRequest {
@@ -18,6 +18,7 @@ export interface MouseMoveRequest {
     happiness: number;
     energy: number;
     cheeseFound: number;
+    algorithm?: Algorithm;
   };
   availableMoves: string[];
   available_cheeses?: { x: number; y: number }[];

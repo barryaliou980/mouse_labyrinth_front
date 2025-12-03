@@ -7,8 +7,10 @@ import MazeGrid from './components/MazeGrid';
 import SimulationPanel from './components/SimulationPanel';
 import ResultsModal from './components/ResultsModal';
 import ServerLogs from './components/ServerLogs';
+
 import ShareModal from './components/ShareModal';
-import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus, Position } from '@/lib/types';
+import { Labyrinth, Mouse, Simulation, SimulationConfig, SimulationStatus, Position ,Algorithm} from '@/lib/types';
+
 import { PythonSimulation } from '@/lib/pythonSimulation';
 import { getAllMockLabyrinths, getMockLabyrinthById } from '@/lib/mockData';
 import { getRulesById } from '@/lib/rules';
@@ -188,6 +190,7 @@ export default function SimulationPage() {
         const dbMice = [];
         for (let i = 0; i < config.mice.length; i++) {
           const mouseConfig = config.mice[i];
+          // Utiliser les positions de départ du labyrinthe si disponible
           const startPos = labyrinth.startPositions && labyrinth.startPositions.length > 0 
             ? labyrinth.startPositions[i % labyrinth.startPositions.length]
             : { x: 1, y: 1 };
@@ -196,8 +199,8 @@ export default function SimulationPage() {
             simulation_id: dbSimulation.id,
             name: mouseConfig.name,
             intelligence_type: 'smart',
-            initial_position: startPos,
-            final_position: startPos,
+            initial_position: startPos as unknown as Record<string, unknown>,
+            final_position: startPos as unknown as Record<string, unknown>,
             health: rules.maxEnergy,
             happiness: rules.maxHappiness,
             energy: rules.maxEnergy,
@@ -213,7 +216,7 @@ export default function SimulationPage() {
           id: dbSimulation.id,
           labyrinthId: labyrinthId,
           labyrinth: { ...labyrinth, id: labyrinthId },
-          mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number }, index: number) => {
+          mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number; algorithm: Algorithm }, index: number) => {
             const startPos = labyrinth.startPositions && labyrinth.startPositions.length > 0 
               ? labyrinth.startPositions[index % labyrinth.startPositions.length]
               : { x: 1, y: 1 };
@@ -229,7 +232,8 @@ export default function SimulationPage() {
               cheeseFound: 0,
               moves: 0,
               isAlive: true,
-              tag: mouseConfig.tag || (index + 1)
+              tag: mouseConfig.tag || (index + 1),
+              algorithm: mouseConfig.algorithm || 'greedy'
             };
           }),
           rules,
@@ -275,7 +279,7 @@ export default function SimulationPage() {
             // Détecter si le message indique qu'une souris a gagné (tous les fromages collectés)
             if (message.includes('🏆') && message.includes('a collecté tous les fromages')) {
               const mouseName = message.split(' ')[1]; // Extraire le nom de la souris
-              const winningMouse = simulation.mice.find(mouse => mouse.name === mouseName);
+              const winningMouse = currentSimulation?.mice.find(mouse => mouse.name === mouseName);
               if (winningMouse) {
                 setWinner(winningMouse);
                 setShowResultsModal(true);
@@ -294,7 +298,7 @@ export default function SimulationPage() {
           id: `sim-${Date.now()}`,
           labyrinthId: config.labyrinthId,
           labyrinth,
-          mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number }, index: number) => {
+          mice: config.mice.map((mouseConfig: { name: string; movementDelay: number; startPosition?: Position; tag: number; algorithm: Algorithm }, index: number) => {
             const startPos = labyrinth.startPositions && labyrinth.startPositions.length > 0 
               ? labyrinth.startPositions[index % labyrinth.startPositions.length]
               : { x: 1, y: 1 };
@@ -304,6 +308,7 @@ export default function SimulationPage() {
               name: mouseConfig.name,
               position: startPos,
               movementDelay: mouseConfig.movementDelay,
+              algorithm: mouseConfig.algorithm || 'greedy',
               health: rules.maxEnergy,
               happiness: rules.maxHappiness,
               energy: rules.maxEnergy,
@@ -540,6 +545,12 @@ export default function SimulationPage() {
                           <div className="flex justify-between">
                             <span className="text-gray-700">Fromages:</span>
                             <span className="text-yellow-600 font-medium">{mouse.cheeseFound}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-700">Algorithme:</span>
+                            <span className="text-gray-900 font-medium">
+                              {mouse.algorithm}
+                            </span>
                           </div>
                         </div>
                       </div>

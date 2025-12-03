@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Square, Settings, Mouse, Brain, Target } from 'lucide-react';
-import { Labyrinth, Mouse as MouseType, Simulation, SimulationRules } from '@/lib/types';
+
+import { Labyrinth, Mouse as MouseType, Simulation, SimulationRules , Algorithm} from '@/lib/types';
 import { RulesService } from '@/lib/apiClient';
+
 import './SimulationPanel.css';
 
 interface SimulationPanelProps {
@@ -41,8 +43,9 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
     movementDelay: number;
     startPosition: { x: number; y: number };
     tag: number;
+    algorithm: Algorithm
   }>>([
-    { name: 'Souris 1', movementDelay: 500, startPosition: { x: 1, y: 1 }, tag: 1 }
+    { name: 'Souris 1', movementDelay: 500, startPosition: { x: 1, y: 1 }, tag: 1, algorithm: 'intelligent' }
   ]);
   
   // Forcer la définition du tag pour toutes les souris
@@ -153,12 +156,16 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
           startPosition = labyrinth.startPositions[0];
         }
       }
+
+      const defaultAlgorithms: Algorithm[] = ['intelligent', 'random', 'straight', 'greedy'];
+      const algorithm = defaultAlgorithms[mice.length % defaultAlgorithms.length];
       
       const newMouse = {
         name: `Souris ${mice.length + 1}`,
         movementDelay: 500, // Délai par défaut de 500ms
         startPosition: startPosition,
-        tag: mice.length + 1
+        tag: mice.length + 1,
+        algorithm,
       };
       console.log(' Nouvelle souris créée:', newMouse);
       setMice([...mice, newMouse]);
@@ -381,6 +388,23 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
                       disabled={isRunning}
                     />
                   </div>
+                </div>
+
+                <div className="mt-3">
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Algorithme
+                  </label>
+                  <select
+                    value={mouse.algorithm}
+                    onChange={(e) => updateMouse(index, 'algorithm', e.target.value as Algorithm)}
+                    className="w-full p-2 border border-gray-300 rounded text-sm text-gray-900 bg-white"
+                    disabled={isRunning}
+                  >
+                    <option value="greedy">greedy</option>
+                    <option value="random">random</option>
+                    <option value="straight">straight</option>
+                    <option value="intelligent">intelligent</option>
+                  </select>
                 </div>
                 
                 <div className="mt-2 text-xs text-gray-500">

@@ -51,7 +51,7 @@ export default function HomePage() {
                 Intelligences multiples
               </h4>
               <p className="text-gray-600 text-sm">
-                Aléatoire, directionnelle, intelligente et sociale - 4 types d'IA distincts pour des comportements variés.
+                Droit, Aléatoire, Gloutonne et Intelligente - 4 types d'IA distincts pour des comportements variés.
               </p>
             </div>
 

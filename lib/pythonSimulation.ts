@@ -493,7 +493,8 @@ export class PythonSimulation {
           happiness: mouse.happiness,
           energy: mouse.energy,
           cheeseFound: mouse.cheeseFound,
-          tag: mouse.tag
+          tag: mouse.tag,
+          algorithm: mouse.algorithm
         } as any,
         availableMoves,
         available_cheeses: uncollectedCheeses // Passer les fromages disponibles pour l'optimisation
@@ -721,14 +722,19 @@ export class PythonSimulation {
     }
     
     // Retirer aussi de la liste des positions de fromages
-    this.simulation.labyrinth.cheesePositions = this.simulation.labyrinth.cheesePositions.filter(
-      pos => !(pos.x === x && pos.y === y)
-    );
+    // this.simulation.labyrinth.cheesePositions = this.simulation.labyrinth.cheesePositions.filter(
+    //   pos => !(pos.x === x && pos.y === y)
+    // );
   }
 
   // Mettre à jour la simulation
   private updateSimulation() {
     if (this.onUpdate) {
+      // 🔁 Recalculer le "tour global" à partir des souris
+      this.simulation.currentTurn = this.simulation.mice.reduce(
+        (max, mouse) => Math.max(max, mouse.moves ?? 0),
+        0
+      );
       // Créer une copie profonde pour forcer la mise à jour
       const updatedSimulation = {
         ...this.simulation,
