@@ -21,7 +21,7 @@ export default function RulesEditor({ rule, onSave, onCancel }: RulesEditorProps
   const [proximityBonus, setProximityBonus] = useState(rule?.proximityBonus || 5);
   const [maxEnergy, setMaxEnergy] = useState(rule?.maxEnergy || 100);
   const [maxHappiness, setMaxHappiness] = useState(rule?.maxHappiness || 100);
-  const [simulationMode, setSimulationMode] = useState<'normal' | 'survie' | undefined>(rule?.simulationMode || undefined);
+  const [simulationMode, setSimulationMode] = useState<'normal' | 'survie' | 'mortelle' | undefined>(rule?.simulationMode || undefined);
   const [winConditions, setWinConditions] = useState<WinCondition[]>(rule?.winConditions || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

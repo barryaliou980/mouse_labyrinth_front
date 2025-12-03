@@ -132,7 +132,8 @@ export async function POST(request: NextRequest) {
         cheeseFound: 0,
         moves: 0,
         isAlive: true,
-        tag: mouseData.tag || (i + 1) // Utiliser le tag fourni ou l'index + 1
+        tag: mouseData.tag || (i + 1), // Utiliser le tag fourni ou l'index + 1
+        algorithm: mouseData.algorithm || 'greedy' // Utiliser l'algorithme fourni ou 'greedy' par défaut
       };
       
       // Forcer la définition du tag si il n'est pas défini

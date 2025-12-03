@@ -98,12 +98,12 @@ const Mouse: React.FC<MouseProps> = ({
               </span>
             </div>
             
-            <div className="flex justify-between">
+            {/* <div className="flex justify-between">
               <span className="text-gray-700">Énergie:</span>
               <span className={getEnergyColor(mouse.energy)}>
                 {mouse.energy}%
               </span>
-            </div>
+            </div> */}
             
             <div className="flex justify-between">
               <span className="text-gray-700">Fromages:</span>

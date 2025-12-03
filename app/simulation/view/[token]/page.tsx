@@ -325,12 +325,12 @@ export default function SharedSimulationViewPage() {
                             {mouse.happiness}%
                           </span>
                         </div>
-                        <div className="flex justify-between">
+                        {/* <div className="flex justify-between">
                           <span className="text-gray-800" style={{ opacity: 1 }}>Énergie:</span>
                           <span className={mouse.energy > 50 ? 'text-green-700 font-medium' : 'text-red-700 font-medium'} style={{ opacity: 1 }}>
                             {mouse.energy}%
                           </span>
-                        </div>
+                        </div> */}
                         <div className="flex justify-between">
                           <span className="text-gray-800" style={{ opacity: 1 }}>Fromages:</span>
                           <span className="text-yellow-700 font-medium" style={{ opacity: 1 }}>{mouse.cheeseFound}</span>

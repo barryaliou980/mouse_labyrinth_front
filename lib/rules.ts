@@ -311,7 +311,6 @@ export function applyTurnEffects(
   // Bonus de fromage
   if (environment.foundCheese) {
     const previousCheeseFound = updatedMouse.cheeseFound;
-    const previousHealth = updatedMouse.health;
     const healthBeforeCheese = updatedMouse.health; // Santé avant l'ajout du fromage
     
     console.log(`🧀 [applyTurnEffects] Fromage détecté - Santé actuelle: ${healthBeforeCheese}, Mode: ${simulationMode}`);
@@ -328,21 +327,21 @@ export function applyTurnEffects(
       updatedMouse.energy + 10
     );
     
-    // Toujours ajouter 10 points de santé quand une souris mange un fromage
+    // Restaurer la santé à 100 quand une souris mange un fromage
     const healthBeforeAdd = updatedMouse.health;
-    updatedMouse.health = Math.min(updatedMouse.health + 10, rules.maxEnergy);
+    updatedMouse.health = rules.maxEnergy; // Restaurer à la santé maximale (100)
     const healthAfterAdd = updatedMouse.health;
     const healthGained = healthAfterAdd - healthBeforeAdd;
     
     console.log(`🧀 ${mouse.name || 'Souris'} mange un fromage - Mode: ${simulationMode}`);
     console.log(`   Santé AVANT: ${healthBeforeAdd}`);
-    console.log(`   Ajout de 10 points: ${healthBeforeAdd} + 10 = ${Math.min(healthBeforeAdd + 10, rules.maxEnergy)}`);
-    console.log(`   Santé APRÈS: ${healthAfterAdd} (gain: +${healthGained} points, limité à ${rules.maxEnergy})`);
+    console.log(`   Santé restaurée à: ${rules.maxEnergy}`);
+    console.log(`   Santé APRÈS: ${healthAfterAdd} (gain: +${healthGained} points)`);
     console.log(`   Fromages: ${previousCheeseFound} → ${updatedMouse.cheeseFound}`);
     
-    // Vérification de sécurité: s'assurer que la santé a bien augmenté
-    if (healthGained <= 0 && healthBeforeAdd < rules.maxEnergy) {
-      console.error(`⚠️ ERREUR: La santé n'a pas augmenté! Avant: ${healthBeforeAdd}, Après: ${healthAfterAdd}`);
+    // Vérification de sécurité: s'assurer que la santé a bien été restaurée
+    if (healthAfterAdd !== rules.maxEnergy) {
+      console.error(`⚠️ ERREUR: La santé n'a pas été restaurée à ${rules.maxEnergy}! Valeur actuelle: ${healthAfterAdd}`);
     }
   }
   

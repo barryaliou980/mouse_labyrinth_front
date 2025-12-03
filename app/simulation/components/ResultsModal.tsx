@@ -238,10 +238,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                       </div>
                       
                       <div>
-                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        {/* <div className="flex justify-between text-xs text-gray-600 mb-1">
                           <span>Énergie</span>
                           <span>{mouse.energy}%</span>
-                        </div>
+                        </div> */}
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className={`h-2 rounded-full transition-all duration-300 ${

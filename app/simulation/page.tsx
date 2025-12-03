@@ -536,12 +536,12 @@ export default function SimulationPage() {
                               {mouse.happiness}%
                             </span>
                           </div>
-                          <div className="flex justify-between">
+                          {/* <div className="flex justify-between">
                             <span className="text-gray-700">Énergie:</span>
                             <span className={mouse.energy > 50 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                               {mouse.energy}%
                             </span>
-                          </div>
+                          </div> */}
                           <div className="flex justify-between">
                             <span className="text-gray-700">Fromages:</span>
                             <span className="text-yellow-600 font-medium">{mouse.cheeseFound}</span>

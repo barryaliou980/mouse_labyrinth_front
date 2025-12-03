@@ -426,21 +426,18 @@ export class PythonSimulation {
         const healthAfterAssign = mouse.health;
         
         // Vérification: s'assurer que la santé a bien été mise à jour
-        if (cheeseCollectedThisTurn && this.simulation.rules.simulationMode === 'mortelle') {
+        if (cheeseCollectedThisTurn) {
           if (healthAfterAssign !== updatedMouse.health) {
             console.error(`⚠️ ERREUR: La santé n'a pas été correctement assignée! updatedMouse.health=${updatedMouse.health}, mouse.health=${healthAfterAssign}`);
           }
-        }
-        
-        // Log après application des effets
-        if (cheeseCollectedThisTurn) {
-          if (this.simulation.rules.simulationMode === 'mortelle') {
-            const healthGained = mouse.health - healthBeforeEffects;
-            this.log(` 🧀 ${mouse.name} a mangé un fromage - Fromages: ${mouse.cheeseFound}, Santé: ${healthBeforeEffects} → ${mouse.health} (+${healthGained} points)`);
-            console.log(`✅ [pythonSimulation] Fromage mangé en mode mortelle - Santé: ${healthBeforeEffects} → ${mouse.health} (+${healthGained})`);
-          } else {
-            this.log(` 🧀 ${mouse.name} a mangé un fromage - Fromages: ${mouse.cheeseFound}, Santé: ${mouse.health}`);
-          }
+          
+          // Log détaillé pour tous les modes
+          const healthGained = mouse.health - healthBeforeEffects;
+          this.log(` 🧀 ${mouse.name} a mangé un fromage - Fromages: ${cheeseBeforeEffects} → ${mouse.cheeseFound}, Santé: ${healthBeforeEffects} → ${mouse.health} (restaurée à ${this.simulation.rules.maxEnergy})`);
+          console.log(`✅ [pythonSimulation] Fromage mangé - ${mouse.name}: Santé ${healthBeforeEffects} → ${mouse.health} (restaurée à ${this.simulation.rules.maxEnergy}), Mode: ${this.simulation.rules.simulationMode}`);
+          
+          // Forcer une mise à jour immédiate de l'affichage après qu'un fromage est mangé
+          this.updateSimulation();
         }
         
         this.log(`${mouse.name} se déplace vers ${move} vers (${newPosition.x}, ${newPosition.y})`);
@@ -745,6 +742,16 @@ export class PythonSimulation {
         },
         mice: this.simulation.mice.map(mouse => ({ ...mouse }))
       };
+      
+      // Log de débogage pour vérifier les valeurs de santé
+      if (this.simulation.mice.some(m => m.cheeseFound > 0)) {
+        this.simulation.mice.forEach(m => {
+          if (m.cheeseFound > 0) {
+            console.log(`🔍 [updateSimulation] ${m.name}: santé=${m.health}, fromages=${m.cheeseFound}`);
+          }
+        });
+      }
+      
       this.onUpdate(updatedSimulation);
     }
     
