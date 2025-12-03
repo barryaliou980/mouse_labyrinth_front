@@ -27,7 +27,7 @@ Le système est réparti avec plusieurs composants interconnectés :
 ### 3. Intelligences Comportementales
 - Modules externes contrôlant les souris
 - Communication via API REST avec serveur Python
-- Au moins 2 intelligences distinctes (aléatoire, directionnelle, etc.)
+- Au moins 2 intelligences distinctes (aléatoire, gloutonne, etc.)
 
 ### 4. Serveur de Règles
 - Définit comment la simulation progresse
