@@ -296,23 +296,26 @@ export class PythonSimulation {
   // Traiter le tour d'une souris
   private async processMouseTurn(mouse: Mouse) {
     try {
-      // Chaque souris a son propre compteur de tours
+      // Initialiser le compteur de pas si nécessaire
       if (!mouse.moves) {
         mouse.moves = 0;
       }
-      mouse.moves++;
       
-      this.log(`- Thread ${mouse.tag} - Tour ${mouse.moves} pour ${mouse.name} à la position (${mouse.position.x}, ${mouse.position.y})`);
+      // Ne pas incrémenter moves ici - il sera incrémenté après un mouvement valide
+      const currentMoves = mouse.moves;
+      this.log(`- Thread ${mouse.tag} - Tour pour ${mouse.name} (${currentMoves} pas effectués) à la position (${mouse.position.x}, ${mouse.position.y})`);
       
       // Vérifier si la souris est déjà sur un fromage non collecté
       const alreadyOnCheese = this.checkCheeseFound(mouse.position);
       this.log(`- Thread ${mouse.tag} - Vérification fromage à (${mouse.position.x}, ${mouse.position.y}): ${alreadyOnCheese}`);
+      let cheeseCollectedThisTurn = false;
       if (alreadyOnCheese) {
         const cheeseKey = `${mouse.position.x}-${mouse.position.y}`;
         if (!this.collectedCheeses.has(cheeseKey)) {
           // La souris est sur un fromage non collecté, le collecter
-          mouse.cheeseFound++;
-          this.log(` ${mouse.name} a trouvé du fromage à (${mouse.position.x}, ${mouse.position.y}) ! Total: ${mouse.cheeseFound}`);
+          // Ne pas modifier cheeseFound et health ici - laisser applyTurnEffects le faire
+          cheeseCollectedThisTurn = true;
+          this.log(` ${mouse.name} a trouvé du fromage à (${mouse.position.x}, ${mouse.position.y}) !`);
           
           // Marquer ce fromage comme collecté
           this.collectedCheeses.add(cheeseKey);
@@ -344,13 +347,16 @@ export class PythonSimulation {
         this.log(`- Thread ${mouse.tag} - Mouvement valide: ${mouse.position.x},${mouse.position.y} → ${newPosition.x},${newPosition.y}`);
         // Mettre à jour la position
         mouse.position = newPosition;
+        // Incrémenter le compteur de pas APRÈS le mouvement valide
         mouse.moves++;
+        this.log(`- Thread ${mouse.tag} - ${mouse.name} a effectué ${mouse.moves} pas`);
         
         // Vérifier si la souris a trouvé du fromage
         const cheeseFound = this.checkCheeseFound(newPosition);
         if (cheeseFound) {
-          mouse.cheeseFound++;
-          this.log(` ${mouse.name} a trouvé du fromage à (${newPosition.x}, ${newPosition.y}) ! Total: ${mouse.cheeseFound}`);
+          // Ne pas modifier cheeseFound et health ici - laisser applyTurnEffects le faire
+          cheeseCollectedThisTurn = true;
+          this.log(` ${mouse.name} a trouvé du fromage à (${newPosition.x}, ${newPosition.y}) !`);
           
           // Marquer ce fromage comme collecté
           const cheeseKey = `${newPosition.x}-${newPosition.y}`;
@@ -369,8 +375,17 @@ export class PythonSimulation {
           }
           
           // Vérifier si tous les fromages atteignables ont été collectés
-          if (this.checkAllCheesesCollected()) {
-            this.log(`${mouse.name} a collecté tous les fromages ! Simulation terminée !`);
+          // ET si les conditions de victoire sont remplies
+          const allCheesesCollected = this.checkAllCheesesCollected();
+          const winConditionsMet = checkWinConditions(mouse, this.simulation.rules, this.simulation.currentTurn || 0);
+          
+          this.log(` Vérification fin: Fromages collectés=${allCheesesCollected}, Conditions victoire=${winConditionsMet}, Fromages mangés=${mouse.cheeseFound}`);
+          
+          // La simulation se termine seulement si :
+          // 1. Tous les fromages sont collectés ET les conditions de victoire sont remplies
+          // OU 2. Toutes les souris sont mortes (vérifié dans checkEndConditions)
+          if (allCheesesCollected && winConditionsMet) {
+            this.log(`🏆 ${mouse.name} a gagné ! Tous les fromages collectés et conditions de victoire remplies !`);
             this.simulation.status = 'completed';
             this.simulation.endTime = new Date().toISOString();
             this.isRunning = false;
@@ -383,15 +398,50 @@ export class PythonSimulation {
             const total = this.getTotalCheesesCount();
             const collected = this.collectedCheeses.size;
             this.log(` Progrès: ${collected}/${total} fromages collectés (${remaining} restants)`);
+            if (allCheesesCollected && !winConditionsMet) {
+              this.log(` ⚠️ Tous les fromages collectés mais conditions de victoire non remplies (besoin de ${this.simulation.rules.winConditions.map(c => `${c.value} ${c.type}`).join(' ou ')})`);
+            }
           }
         }
         
-        // Appliquer les effets du tour
+        // Appliquer les effets du tour (gère cheeseFound, health, etc.)
+        const healthBeforeEffects = mouse.health;
+        const cheeseBeforeEffects = mouse.cheeseFound;
+        
         const environment = {
           hasOtherMiceNearby: this.checkOtherMiceNearby(mouse),
-          foundCheese: false // Le fromage a déjà été traité plus haut
+          foundCheese: cheeseCollectedThisTurn // Indiquer si un fromage a été collecté ce tour
         };
-        applyTurnEffects(mouse, this.simulation.rules, environment);
+        
+        this.log(` 📊 Avant applyTurnEffects - ${mouse.name}: Santé=${healthBeforeEffects}, Fromages=${cheeseBeforeEffects}, foundCheese=${cheeseCollectedThisTurn}`);
+        
+        const updatedMouse = applyTurnEffects(mouse, this.simulation.rules, environment);
+        
+        this.log(` 📊 Après applyTurnEffects - ${mouse.name}: Santé=${updatedMouse.health}, Fromages=${updatedMouse.cheeseFound}`);
+        
+        // Appliquer les modifications retournées par applyTurnEffects
+        // S'assurer que la santé est bien appliquée
+        const healthBeforeAssign = mouse.health;
+        Object.assign(mouse, updatedMouse);
+        const healthAfterAssign = mouse.health;
+        
+        // Vérification: s'assurer que la santé a bien été mise à jour
+        if (cheeseCollectedThisTurn && this.simulation.rules.simulationMode === 'mortelle') {
+          if (healthAfterAssign !== updatedMouse.health) {
+            console.error(`⚠️ ERREUR: La santé n'a pas été correctement assignée! updatedMouse.health=${updatedMouse.health}, mouse.health=${healthAfterAssign}`);
+          }
+        }
+        
+        // Log après application des effets
+        if (cheeseCollectedThisTurn) {
+          if (this.simulation.rules.simulationMode === 'mortelle') {
+            const healthGained = mouse.health - healthBeforeEffects;
+            this.log(` 🧀 ${mouse.name} a mangé un fromage - Fromages: ${mouse.cheeseFound}, Santé: ${healthBeforeEffects} → ${mouse.health} (+${healthGained} points)`);
+            console.log(`✅ [pythonSimulation] Fromage mangé en mode mortelle - Santé: ${healthBeforeEffects} → ${mouse.health} (+${healthGained})`);
+          } else {
+            this.log(` 🧀 ${mouse.name} a mangé un fromage - Fromages: ${mouse.cheeseFound}, Santé: ${mouse.health}`);
+          }
+        }
         
         this.log(`${mouse.name} se déplace vers ${move} vers (${newPosition.x}, ${newPosition.y})`);
       } else {
@@ -536,17 +586,23 @@ export class PythonSimulation {
     // Vérification alternative : compter les fromages restants dans la grille
     const remainingInGrid = this.countCheesesInGrid();
     
-    this.log(` Vérification fin: ${collectedCount}/${totalCheeses} fromages collectés`);
-    this.log(` Fromages restants dans la grille: ${remainingInGrid}`);
-    this.log(` Fromages collectés: [${Array.from(this.collectedCheeses).join(', ')}]`);
+    this.log(` 🔍 Vérification fin: ${collectedCount}/${totalCheeses} fromages collectés`);
+    this.log(` 🔍 Fromages restants dans la grille: ${remainingInGrid}`);
+    this.log(` 🔍 Fromages collectés: [${Array.from(this.collectedCheeses).join(', ')}]`);
     
-    // Vérifier seulement s'il n'y a plus de fromages dans la grille
-    if (remainingInGrid === 0) {
-      this.log(` Tous les fromages ont été collectés ! (${collectedCount}/${totalCheeses})`);
+    // Vérifier seulement s'il n'y a plus de fromages dans la grille ET qu'on a collecté au moins un fromage
+    // ET que le nombre collecté correspond au total
+    if (remainingInGrid === 0 && collectedCount > 0 && collectedCount >= totalCheeses) {
+      this.log(` ✅ Tous les fromages ont été collectés ! (${collectedCount}/${totalCheeses})`);
       return true;
     }
     
-    this.log(` Simulation continue - ${totalCheeses - collectedCount} fromages restants (${remainingInGrid} dans la grille)`);
+    // Si on a collecté tous les fromages mais qu'il en reste dans la grille, c'est une incohérence
+    if (collectedCount >= totalCheeses && remainingInGrid > 0) {
+      this.log(` ⚠️ Incohérence détectée: ${collectedCount} collectés mais ${remainingInGrid} restants dans la grille`);
+    }
+    
+    this.log(` ⏳ Simulation continue - ${totalCheeses - collectedCount} fromages restants (${remainingInGrid} dans la grille)`);
     return false;
   }
   
@@ -605,15 +661,47 @@ export class PythonSimulation {
         clearInterval(this.intervalId);
         this.intervalId = null;
       }
-      this.log('Simulation terminée - toutes les souris sont mortes');
+      this.log('💀 Simulation terminée - toutes les souris sont mortes');
       return;
     }
     
-    // La logique de victoire est maintenant gérée dans processMouseTurn()
-    // quand tous les fromages sont collectés
+    // Vérifier si tous les fromages sont collectés
+    const allCheesesCollected = this.checkAllCheesesCollected();
     
-    // La logique de victoire est entièrement gérée dans processMouseTurn()
-    // quand tous les fromages sont collectés via checkAllCheesesCollected()
+    if (allCheesesCollected) {
+      // Si tous les fromages sont collectés, la simulation s'arrête
+      this.log(`🧀 Tous les fromages ont été collectés ! Simulation terminée.`);
+      
+      // Vérifier aussi les conditions de victoire pour afficher les gagnants
+      const winningMice = aliveMice.filter(mouse => 
+        checkWinConditions(mouse, this.simulation.rules, this.simulation.currentTurn || 0)
+      );
+      
+      if (winningMice.length > 0) {
+        this.log(`🏆 ${winningMice.map(m => m.name).join(', ')} ont gagné ! Conditions de victoire remplies.`);
+      } else {
+        // Tous les fromages collectés mais conditions de victoire non remplies
+        this.log(`⚠️ Tous les fromages collectés mais aucune souris n'a rempli les conditions de victoire`);
+        this.log(`   Conditions requises: ${this.simulation.rules.winConditions.map(c => `${c.value} ${c.type}`).join(' ou ')}`);
+        aliveMice.forEach(mouse => {
+          this.log(`   ${mouse.name}: ${mouse.cheeseFound} fromages, santé: ${mouse.health}`);
+        });
+      }
+      
+      // Arrêter la simulation dans tous les cas si tous les fromages sont collectés
+      this.simulation.status = 'completed';
+      this.simulation.endTime = new Date().toISOString();
+      this.isRunning = false;
+      if (this.intervalId) {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
+      }
+      return;
+    }
+    
+    // La simulation continue si :
+    // - Il reste des souris vivantes ET
+    // - (Il reste des fromages OU les conditions de victoire ne sont pas remplies)
   }
 
   // Retirer un fromage de la grille

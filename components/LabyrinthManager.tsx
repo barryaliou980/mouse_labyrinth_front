@@ -138,6 +138,11 @@ export default function LabyrinthManager({ onLabyrinthSelect, onRuleSelect }: La
                   <p>Consommation d'énergie: {rule.energyConsumption}</p>
                   <p>Décroissance bonheur: {rule.happinessDecay}</p>
                   <p>Bonus fromage: {rule.cheeseBonus}</p>
+                  {rule.simulationMode && (
+                    <p className="text-blue-600 font-semibold">
+                      Mode: {rule.simulationMode === 'survie' ? 'Survie' : 'Normal'}
+                    </p>
+                  )}
                   <p>Conditions de victoire: {rule.winConditions.length}</p>
                 </div>
               </div>

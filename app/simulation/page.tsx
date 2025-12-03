@@ -89,9 +89,35 @@ export default function SimulationPage() {
         throw new Error('Labyrinthe non trouvé');
       }
       
-      const rules = getRulesById(config.rulesId);
-      if (!rules) {
-        throw new Error('Règles non trouvées');
+      // Récupérer les règles depuis la base de données
+      let rules;
+      try {
+        console.log('Récupération des règles avec ID:', config.rulesId);
+        // Essayer d'abord de récupérer depuis la DB (si c'est un UUID)
+        const isUUID = config.rulesId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        console.log('Est un UUID?', isUUID);
+        
+        if (isUUID) {
+          const { RulesService } = await import('@/lib/apiClient');
+          console.log('Récupération depuis la DB via RulesService...');
+          rules = await RulesService.getById(config.rulesId);
+          console.log('Règle récupérée depuis la DB:', rules?.name);
+        } else {
+          // Si ce n'est pas un UUID, essayer les règles prédéfinies (fallback)
+          console.log('Récupération depuis les règles prédéfinies...');
+          rules = getRulesById(config.rulesId);
+          console.log('Règle prédéfinie trouvée:', rules?.name);
+        }
+        
+        if (!rules) {
+          console.error('Aucune règle trouvée avec l\'ID:', config.rulesId);
+          throw new Error('Règles non trouvées');
+        }
+        
+        console.log('Règles chargées avec succès:', rules.name);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des règles:', error);
+        throw new Error('Règles non trouvées: ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
       }
       
       // Sauvegarder la simulation dans la base de données pour permettre la synchronisation

@@ -27,6 +27,7 @@ export async function GET(
       proximityBonus: rule.rules_data.proximityBonus,
       maxEnergy: rule.rules_data.maxEnergy,
       maxHappiness: rule.rules_data.maxHappiness,
+      simulationMode: rule.rules_data.simulationMode,
       winConditions: rule.rules_data.winConditions
     };
     
@@ -55,7 +56,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, turnDuration, energyConsumption, happinessDecay, isolationPenalty, cheeseBonus, proximityBonus, maxEnergy, maxHappiness, winConditions } = body;
+    const { name, description, turnDuration, energyConsumption, happinessDecay, isolationPenalty, cheeseBonus, proximityBonus, maxEnergy, maxHappiness, simulationMode, winConditions } = body;
 
     const rulesData = {
       turnDuration: turnDuration || 500,
@@ -66,6 +67,7 @@ export async function PUT(
       proximityBonus: proximityBonus || 5,
       maxEnergy: maxEnergy || 100,
       maxHappiness: maxHappiness || 100,
+      simulationMode: simulationMode || undefined,
       winConditions: winConditions || []
     };
 
@@ -89,6 +91,7 @@ export async function PUT(
       proximityBonus: updatedRule.rules_data.proximityBonus,
       maxEnergy: updatedRule.rules_data.maxEnergy,
       maxHappiness: updatedRule.rules_data.maxHappiness,
+      simulationMode: updatedRule.rules_data.simulationMode,
       winConditions: updatedRule.rules_data.winConditions
     };
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Square, Settings, Mouse, Brain, Target } from 'lucide-react';
 import { Labyrinth, Mouse as MouseType, Simulation, SimulationRules } from '@/lib/types';
-import { getAllRules } from '@/lib/rules';
+import { RulesService } from '@/lib/apiClient';
 import './SimulationPanel.css';
 
 interface SimulationPanelProps {
@@ -35,7 +35,7 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
   isRunning
 }) => {
   const [selectedLabyrinth, setSelectedLabyrinth] = useState<string>('');
-  const [selectedRules, setSelectedRules] = useState<string>('classic');
+  const [selectedRules, setSelectedRules] = useState<string>('');
   const [mice, setMice] = useState<Array<{
     name: string;
     movementDelay: number;
@@ -59,9 +59,65 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
   
   const [availableRules, setAvailableRules] = useState<SimulationRules[]>([]);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [rulesLoading, setRulesLoading] = useState(true);
+  const [rulesError, setRulesError] = useState<string | null>(null);
 
   useEffect(() => {
-    setAvailableRules(getAllRules());
+    const loadRules = async () => {
+      try {
+        setRulesLoading(true);
+        setRulesError(null);
+        
+        console.log('Début du chargement des règles depuis la DB...');
+        
+        // Charger UNIQUEMENT les règles depuis la base de données
+        const dbRules = await RulesService.getAll();
+        console.log('Règles chargées depuis la DB:', dbRules.length);
+        console.log('Règles:', dbRules.map(r => ({ id: r.id, name: r.name })));
+        
+        if (dbRules.length === 0) {
+          console.warn('Aucune règle trouvée dans la base de données');
+          setAvailableRules([]);
+          setRulesError('Aucune règle trouvée dans la base de données. Veuillez créer des règles dans la page de gestion.');
+          setRulesLoading(false);
+          return;
+        }
+        
+        // Trier les règles pour mettre "normal" et "survie" en premier (si elles existent)
+        const sortedRules = [...dbRules].sort((a, b) => {
+          // Vérifier par nom ou ID
+          const aIsNormal = a.id === 'normal' || a.name.toLowerCase().includes('normal');
+          const bIsNormal = b.id === 'normal' || b.name.toLowerCase().includes('normal');
+          const aIsSurvie = a.id === 'survie' || a.name.toLowerCase().includes('survie');
+          const bIsSurvie = b.id === 'survie' || b.name.toLowerCase().includes('survie');
+          
+          if (aIsNormal && !bIsNormal) return -1;
+          if (!aIsNormal && bIsNormal) return 1;
+          if (aIsSurvie && !bIsSurvie) return -1;
+          if (!aIsSurvie && bIsSurvie) return 1;
+          return a.name.localeCompare(b.name);
+        });
+        
+        setAvailableRules(sortedRules);
+        console.log('Règles triées disponibles:', sortedRules.map(r => ({ id: r.id, name: r.name })));
+        console.log('Nombre de règles:', sortedRules.length);
+        
+        // Si aucune règle n'est sélectionnée et qu'il y a des règles, sélectionner la première
+        if (!selectedRules && sortedRules.length > 0) {
+          setSelectedRules(sortedRules[0].id);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des règles depuis la DB:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+        setAvailableRules([]);
+        setRulesError(`Impossible de charger les règles: ${errorMessage}. Vérifiez votre connexion et que l'API fonctionne.`);
+      } finally {
+        setRulesLoading(false);
+        console.log('Chargement des règles terminé');
+      }
+    };
+    
+    loadRules();
   }, []);
 
   useEffect(() => {
@@ -122,8 +178,13 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
   };
 
   const handleStartSimulation = () => {
-    if (!selectedLabyrinth || mice.length === 0) {
-      alert('Veuillez sélectionner un labyrinthe et au moins une souris');
+    if (!selectedLabyrinth || mice.length === 0 || !selectedRules) {
+      alert('Veuillez sélectionner un labyrinthe, au moins une souris et une règle de simulation');
+      return;
+    }
+    
+    if (availableRules.length === 0) {
+      alert('Aucune règle disponible. Veuillez créer des règles dans la page de gestion.');
       return;
     }
 
@@ -182,18 +243,64 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Règles de simulation
           </label>
-          <select
-            value={selectedRules}
-            onChange={(e) => setSelectedRules(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
-            disabled={isRunning}
-          >
-            {availableRules.map((rule) => (
-              <option key={rule.id} value={rule.id}>
-                {rule.name} - {rule.description}
-              </option>
-            ))}
-          </select>
+          {rulesLoading ? (
+            <div className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
+              Chargement des règles depuis la base de données...
+            </div>
+          ) : rulesError ? (
+            <div className="w-full p-3 border border-red-300 rounded-lg bg-red-50 text-red-700">
+              <p className="font-semibold">Erreur de chargement</p>
+              <p className="text-sm">{rulesError}</p>
+              <p className="text-xs mt-2">Veuillez créer des règles dans la page de gestion.</p>
+            </div>
+          ) : (
+            <select
+              value={selectedRules}
+              onChange={(e) => {
+                console.log('Règle sélectionnée:', e.target.value);
+                setSelectedRules(e.target.value);
+              }}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+              disabled={isRunning || availableRules.length === 0}
+              required
+            >
+              {availableRules.length === 0 ? (
+                <option value="">Aucune règle disponible</option>
+              ) : (
+                <>
+                  <option value="">Sélectionner une règle</option>
+                  {availableRules.map((rule) => (
+                    <option key={rule.id} value={rule.id}>
+                      {rule.name} - {rule.description}
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+          )}
+          {availableRules.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500 mb-1">
+                {availableRules.length} règle{availableRules.length > 1 ? 's' : ''} disponible{availableRules.length > 1 ? 's' : ''}
+              </p>
+              <p className="text-xs text-blue-600 mb-1">
+                Règle sélectionnée: <strong>{availableRules.find(r => r.id === selectedRules)?.name || selectedRules}</strong>
+              </p>
+              {/* Debug: Liste de toutes les règles disponibles */}
+              {process.env.NODE_ENV === 'development' && (
+                <details className="text-xs text-gray-400 mt-1">
+                  <summary className="cursor-pointer">Voir toutes les règles ({availableRules.length})</summary>
+                  <ul className="list-disc list-inside mt-1 space-y-0.5">
+                    {availableRules.map((rule) => (
+                      <li key={rule.id} className={rule.id === selectedRules ? 'text-blue-600 font-semibold' : ''}>
+                        {rule.id}: {rule.name}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Configuration des souris */}

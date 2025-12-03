@@ -9,35 +9,61 @@ import {
 // GET /api/rules - Récupérer toutes les règles
 export async function GET() {
   try {
+    console.log('API: Début du chargement des règles depuis la DB...');
     const rules = await getSimulationRules();
+    console.log('API: Règles récupérées:', rules.length);
+    
+    if (!rules || rules.length === 0) {
+      console.log('API: Aucune règle trouvée dans la DB');
+      return NextResponse.json({
+        success: true,
+        data: []
+      });
+    }
     
     // Transformer les données de la base vers le format attendu
-    const formattedRules = rules.map((dbRule) => ({
-      id: dbRule.id,
-      name: dbRule.name,
-      description: dbRule.description,
-      turnDuration: dbRule.rules_data.turnDuration,
-      energyConsumption: dbRule.rules_data.energyConsumption,
-      happinessDecay: dbRule.rules_data.happinessDecay,
-      isolationPenalty: dbRule.rules_data.isolationPenalty,
-      cheeseBonus: dbRule.rules_data.cheeseBonus,
-      proximityBonus: dbRule.rules_data.proximityBonus,
-      maxEnergy: dbRule.rules_data.maxEnergy,
-      maxHappiness: dbRule.rules_data.maxHappiness,
-      winConditions: dbRule.rules_data.winConditions
-    }));
+    const formattedRules = rules
+      .map((dbRule) => {
+        try {
+          const rulesData = dbRule.rules_data as any;
+          return {
+            id: dbRule.id,
+            name: dbRule.name,
+            description: dbRule.description,
+            turnDuration: rulesData?.turnDuration || 500,
+            energyConsumption: rulesData?.energyConsumption || 1,
+            happinessDecay: rulesData?.happinessDecay || 1,
+            isolationPenalty: rulesData?.isolationPenalty || 1,
+            cheeseBonus: rulesData?.cheeseBonus || 20,
+            proximityBonus: rulesData?.proximityBonus || 5,
+            maxEnergy: rulesData?.maxEnergy || 100,
+            maxHappiness: rulesData?.maxHappiness || 100,
+            simulationMode: rulesData?.simulationMode,
+            winConditions: rulesData?.winConditions || []
+          };
+        } catch (err) {
+          console.error('Erreur lors du formatage d\'une règle:', err, dbRule);
+          return null;
+        }
+      })
+      .filter((rule): rule is NonNullable<typeof rule> => rule !== null);
+    
+    console.log('API: Règles formatées:', formattedRules.length);
     
     return NextResponse.json({
       success: true,
       data: formattedRules
     });
   } catch (error) {
-    console.error('Error fetching rules:', error);
+    console.error('API: Erreur lors du chargement des règles:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('API: Détails de l\'erreur:', errorMessage);
+    
     return NextResponse.json(
       {
         success: false,
         error: 'Failed to fetch rules',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: errorMessage
       },
       { status: 500 }
     );
@@ -48,7 +74,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, turnDuration, energyConsumption, happinessDecay, isolationPenalty, cheeseBonus, proximityBonus, maxEnergy, maxHappiness, winConditions } = body;
+    const { name, description, turnDuration, energyConsumption, happinessDecay, isolationPenalty, cheeseBonus, proximityBonus, maxEnergy, maxHappiness, simulationMode, winConditions } = body;
 
     if (!name || !description) {
       return NextResponse.json(
@@ -69,6 +95,7 @@ export async function POST(request: NextRequest) {
       proximityBonus: proximityBonus || 5,
       maxEnergy: maxEnergy || 100,
       maxHappiness: maxHappiness || 100,
+      simulationMode: simulationMode || undefined,
       winConditions: winConditions || []
     };
 
@@ -92,6 +119,7 @@ export async function POST(request: NextRequest) {
       proximityBonus: newRule.rules_data.proximityBonus,
       maxEnergy: newRule.rules_data.maxEnergy,
       maxHappiness: newRule.rules_data.maxHappiness,
+      simulationMode: newRule.rules_data.simulationMode,
       winConditions: newRule.rules_data.winConditions
     };
 

@@ -87,14 +87,37 @@ export class LabyrinthService {
 // Service pour les règles de simulation
 export class RulesService {
   static async getAll(): Promise<SimulationRules[]> {
-    const response = await fetch(`${API_BASE_URL}/rules`);
-    const result: ApiResponse<SimulationRules[]> = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to fetch rules');
+    try {
+      // Ajouter un timeout de 10 secondes
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(`${API_BASE_URL}/rules`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result: ApiResponse<SimulationRules[]> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch rules');
+      }
+      
+      return result.data || [];
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Timeout: La requête a pris trop de temps. Vérifiez votre connexion.');
+        }
+        throw error;
+      }
+      throw new Error('Erreur inconnue lors du chargement des règles');
     }
-    
-    return result.data || [];
   }
 
   static async getById(id: string): Promise<SimulationRules> {

@@ -60,6 +60,7 @@ export interface SimulationRules {
   maxEnergy: number;
   maxHappiness: number;
   winConditions: WinCondition[];
+  simulationMode?: 'normal' | 'survie' | 'mortelle'; // Mode de simulation: normal (par défaut), survie ou mortelle
 }
 
 export interface SimulationResults {

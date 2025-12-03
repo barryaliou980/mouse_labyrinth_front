@@ -146,6 +146,72 @@ export const predefinedRules: { [key: string]: SimulationRules } = {
         description: 'Survivre 5000 tours'
       }
     ]
+  },
+  
+  normal: {
+    id: 'normal',
+    name: 'Normal',
+    description: 'Mode normal - pas de mort, règles classiques',
+    turnDuration: 500,
+    energyConsumption: 1,
+    happinessDecay: 1,
+    isolationPenalty: 1,
+    cheeseBonus: 20,
+    proximityBonus: 5,
+    maxEnergy: 100,
+    maxHappiness: 100,
+    simulationMode: 'normal',
+    winConditions: [
+      {
+        type: 'cheese_count',
+        value: 10,
+        description: 'Trouver 10 fromages'
+      }
+    ]
+  },
+  
+  survie: {
+    id: 'survie',
+    name: 'Survie',
+    description: 'Mode survie - perte de 1 point de vie tous les 5 pas, restauration à 10 avec fromage',
+    turnDuration: 500,
+    energyConsumption: 1,
+    happinessDecay: 1,
+    isolationPenalty: 1,
+    cheeseBonus: 20,
+    proximityBonus: 5,
+    maxEnergy: 100,
+    maxHappiness: 100,
+    simulationMode: 'survie',
+    winConditions: [
+      {
+        type: 'cheese_count',
+        value: 10,
+        description: 'Trouver 10 fromages'
+      }
+    ]
+  },
+  
+  mortelle: {
+    id: 'mortelle',
+    name: 'Mortelle',
+    description: 'Mode mortelle - perte de 10 points de vie tous les 5 pas, +10 santé avec fromage, les souris peuvent mourir',
+    turnDuration: 500,
+    energyConsumption: 1,
+    happinessDecay: 1,
+    isolationPenalty: 1,
+    cheeseBonus: 20,
+    proximityBonus: 5,
+    maxEnergy: 100,
+    maxHappiness: 100,
+    simulationMode: 'mortelle',
+    winConditions: [
+      {
+        type: 'cheese_count',
+        value: 10,
+        description: 'Trouver 10 fromages'
+      }
+    ]
   }
 };
 
@@ -189,14 +255,38 @@ export function checkWinConditions(
 
 // Fonction pour calculer les effets d'un tour
 export function applyTurnEffects(
-  mouse: { health: number; happiness: number; energy: number; cheeseFound: number; isAlive: boolean },
+  mouse: { health: number; happiness: number; energy: number; cheeseFound: number; isAlive: boolean; moves?: number; name?: string },
   rules: SimulationRules,
   environment: {
     hasOtherMiceNearby: boolean;
     foundCheese: boolean;
   }
 ): { health: number; happiness: number; energy: number; cheeseFound: number; isAlive: boolean } {
-  const updatedMouse = { ...mouse };
+  // Copier toutes les valeurs actuelles de la souris
+  const updatedMouse = { 
+    health: mouse.health,
+    happiness: mouse.happiness,
+    energy: mouse.energy,
+    cheeseFound: mouse.cheeseFound, // Utiliser la valeur actuelle
+    isAlive: mouse.isAlive
+  };
+  const simulationMode = rules.simulationMode || 'normal';
+  
+  console.log(`[applyTurnEffects] Entrée - ${mouse.name || 'Souris'}: Santé=${mouse.health}, Fromages=${mouse.cheeseFound}, Moves=${mouse.moves}, Mode=${simulationMode}, foundCheese=${environment.foundCheese}`);
+  
+  // Mode survie: perte de vie tous les 5 pas
+  if (simulationMode === 'survie' && mouse.moves && mouse.moves > 0 && mouse.moves % 5 === 0) {
+    updatedMouse.health = Math.max(0, updatedMouse.health - 1);
+  }
+  
+  // Mode mortelle: perte de 10 points de vie tous les 5 pas
+  // Vérifier que moves est bien défini et que c'est un multiple de 5
+  if (simulationMode === 'mortelle' && mouse.moves && mouse.moves > 0 && mouse.moves % 5 === 0) {
+    const previousHealth = updatedMouse.health;
+    updatedMouse.health = Math.max(0, updatedMouse.health - 10);
+    // Log pour débogage
+    console.log(`⚡ Mode mortelle: ${mouse.name || 'Souris'} a effectué ${mouse.moves} pas - Perte de 10 points de vie (${previousHealth} → ${updatedMouse.health})`);
+  }
   
   // Consommation d'énergie de base
   // Consommation d'énergie (minimum 10 pour éviter la mort)
@@ -220,7 +310,15 @@ export function applyTurnEffects(
   
   // Bonus de fromage
   if (environment.foundCheese) {
-    updatedMouse.cheeseFound += 1;
+    const previousCheeseFound = updatedMouse.cheeseFound;
+    const previousHealth = updatedMouse.health;
+    const healthBeforeCheese = updatedMouse.health; // Santé avant l'ajout du fromage
+    
+    console.log(`🧀 [applyTurnEffects] Fromage détecté - Santé actuelle: ${healthBeforeCheese}, Mode: ${simulationMode}`);
+    
+    // Incrémenter le compteur de fromages
+    updatedMouse.cheeseFound = previousCheeseFound + 1;
+    
     updatedMouse.happiness = Math.min(
       rules.maxHappiness,
       updatedMouse.happiness + rules.cheeseBonus
@@ -229,15 +327,49 @@ export function applyTurnEffects(
       rules.maxEnergy,
       updatedMouse.energy + 10
     );
+    
+    // Mode survie: restaurer la vie à 10 quand on mange un fromage
+    if (simulationMode === 'survie') {
+      updatedMouse.health = 10;
+      console.log(`🧀 Mode survie: ${mouse.name || 'Souris'} mange un fromage - Fromages: ${previousCheeseFound} → ${updatedMouse.cheeseFound}, Santé: ${previousHealth} → 10`);
+    }
+    
+    // Mode mortelle: ajouter 10 points de santé quand on mange un fromage
+    if (simulationMode === 'mortelle') {
+      const healthBeforeAdd = updatedMouse.health;
+      // Ajouter 10 points de santé (limité à maxEnergy)
+      updatedMouse.health = Math.min(updatedMouse.health + 10, rules.maxEnergy);
+      const healthAfterAdd = updatedMouse.health;
+      const healthGained = healthAfterAdd - healthBeforeAdd;
+      
+      console.log(`🧀 Mode mortelle: ${mouse.name || 'Souris'} mange un fromage`);
+      console.log(`   Santé AVANT ajout: ${healthBeforeAdd}`);
+      console.log(`   Ajout de 10 points: ${healthBeforeAdd} + 10 = ${healthBeforeAdd + 10}`);
+      console.log(`   Santé APRÈS ajout: ${healthAfterAdd} (gain: +${healthGained} points, limité à ${rules.maxEnergy})`);
+      console.log(`   Fromages: ${previousCheeseFound} → ${updatedMouse.cheeseFound}`);
+      
+      // Vérification de sécurité: s'assurer que la santé a bien augmenté
+      if (healthGained <= 0 && healthBeforeAdd < rules.maxEnergy) {
+        console.error(`⚠️ ERREUR: La santé n'a pas augmenté! Avant: ${healthBeforeAdd}, Après: ${healthAfterAdd}`);
+      }
+    }
   }
   
-  // Vérifier si la souris est morte (DÉSACTIVÉ - les souris ne meurent jamais)
-  // if (updatedMouse.energy <= 0 || updatedMouse.happiness <= 0) {
-  //   updatedMouse.isAlive = false;
-  // }
+  // Vérifier si la souris est morte
+  // En mode mortelle, la souris meurt si sa vie atteint 0
+  if (simulationMode === 'mortelle') {
+    if (updatedMouse.health <= 0) {
+      updatedMouse.isAlive = false;
+      updatedMouse.health = 0; // S'assurer que la vie ne devient pas négative
+    } else {
+      updatedMouse.isAlive = true;
+    }
+  } else {
+    // Pour les autres modes, les souris ne meurent jamais
+    updatedMouse.isAlive = true;
+  }
   
-  // Les souris ne meurent jamais - elles restent toujours vivantes
-  updatedMouse.isAlive = true;
+  console.log(`[applyTurnEffects] Sortie - ${mouse.name || 'Souris'}: Santé=${updatedMouse.health}, Fromages=${updatedMouse.cheeseFound}, isAlive=${updatedMouse.isAlive}`);
   
   return updatedMouse;
 }

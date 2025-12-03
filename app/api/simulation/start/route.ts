@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSimulation, createMouse } from '@/lib/supabaseClient';
+import { createSimulation, createMouse, getSimulationRuleById } from '@/lib/supabaseClient';
 import { getRulesById } from '@/lib/rules';
 import { Simulation, Mouse, IntelligenceType } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -31,13 +31,46 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Récupérer les règles
-    const rules = getRulesById(rulesId);
-    if (!rules) {
+    // Récupérer les règles depuis la base de données ou les règles prédéfinies
+    let rules;
+    try {
+      // Vérifier si c'est un UUID (règle de la DB) ou un ID simple (règle prédéfinie)
+      const isUUID = rulesId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      
+      if (isUUID) {
+        // Récupérer depuis la base de données
+        const dbRule = await getSimulationRuleById(rulesId);
+        rules = dbRule.rules_data as any;
+        // S'assurer que l'ID est présent
+        if (!rules.id) {
+          rules.id = dbRule.id;
+        }
+        if (!rules.name) {
+          rules.name = dbRule.name;
+        }
+        if (!rules.description) {
+          rules.description = dbRule.description;
+        }
+      } else {
+        // Règle prédéfinie
+        rules = getRulesById(rulesId);
+      }
+      
+      if (!rules) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Règles non trouvées'
+          },
+          { status: 400 }
+        );
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des règles:', error);
       return NextResponse.json(
         {
           success: false,
-          error: 'Invalid rules ID'
+          error: 'Erreur lors de la récupération des règles: ' + (error instanceof Error ? error.message : 'Erreur inconnue')
         },
         { status: 400 }
       );

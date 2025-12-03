@@ -21,6 +21,7 @@ export default function RulesEditor({ rule, onSave, onCancel }: RulesEditorProps
   const [proximityBonus, setProximityBonus] = useState(rule?.proximityBonus || 5);
   const [maxEnergy, setMaxEnergy] = useState(rule?.maxEnergy || 100);
   const [maxHappiness, setMaxHappiness] = useState(rule?.maxHappiness || 100);
+  const [simulationMode, setSimulationMode] = useState<'normal' | 'survie' | undefined>(rule?.simulationMode || undefined);
   const [winConditions, setWinConditions] = useState<WinCondition[]>(rule?.winConditions || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +60,7 @@ export default function RulesEditor({ rule, onSave, onCancel }: RulesEditorProps
         proximityBonus,
         maxEnergy,
         maxHappiness,
+        simulationMode: simulationMode || undefined,
         winConditions
       };
 
@@ -205,6 +207,25 @@ export default function RulesEditor({ rule, onSave, onCancel }: RulesEditorProps
                 min="50"
                 max="200"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Mode de simulation</label>
+              <select
+                value={simulationMode || ''}
+                onChange={(e) => setSimulationMode(e.target.value === '' ? undefined : e.target.value as 'normal' | 'survie' | 'mortelle')}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Par défaut (normal)</option>
+                <option value="normal">Normal - pas de mort, règles classiques</option>
+                <option value="survie">Survie - perte de 1 point de vie tous les 5 pas, restauration avec fromage</option>
+                <option value="mortelle">Mortelle - perte de 10 points de vie tous les 5 pas, +10 santé avec fromage, les souris peuvent mourir</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {simulationMode === 'survie' && 'Mode survie: perte de 1 point de vie tous les 5 pas, restauration à 10 avec fromage'}
+                {simulationMode === 'normal' && 'Mode normal: règles classiques sans mort'}
+                {simulationMode === 'mortelle' && 'Mode mortelle: perte de 10 points de vie tous les 5 pas, +10 santé avec fromage, les souris meurent si leur vie atteint 0'}
+                {!simulationMode && 'Utilise les règles par défaut du système'}
+              </p>
             </div>
           </div>
         </div>
