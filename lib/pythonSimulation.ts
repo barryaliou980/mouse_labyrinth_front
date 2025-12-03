@@ -282,7 +282,8 @@ export class PythonSimulation {
       if (!mouse.moves) {
         mouse.moves = 0;
       }
-      mouse.moves++;
+
+      this.simulation.currentTurn++;
       
       this.log(`- Thread ${mouse.tag} - Tour ${mouse.moves} pour ${mouse.name} à la position (${mouse.position.x}, ${mouse.position.y})`);
       
